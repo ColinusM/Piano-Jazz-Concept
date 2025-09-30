@@ -277,6 +277,63 @@
             margin-bottom: 0.8rem;
             margin-right: 0.5rem;
             font-weight: 600;
+            position: relative;
+        }
+
+        .category-container {
+            display: inline-block;
+            position: relative;
+            margin-right: 0.5rem;
+        }
+
+        .category-edit-icon {
+            cursor: pointer;
+            font-size: 0.7rem;
+            opacity: 0;
+            margin-left: 0.3rem;
+            transition: opacity 0.2s;
+        }
+
+        .category-container:hover .category-edit-icon {
+            opacity: 1;
+        }
+
+        .category-dropdown {
+            display: none;
+            position: absolute;
+            top: 100%;
+            left: 0;
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            z-index: 1000;
+            min-width: 180px;
+            margin-top: 0.3rem;
+        }
+
+        .category-dropdown.show {
+            display: block;
+        }
+
+        .category-option {
+            padding: 0.6rem 1rem;
+            cursor: pointer;
+            transition: background 0.2s;
+            font-size: 0.85rem;
+            color: #333;
+        }
+
+        .category-option:hover {
+            background: #f5f5f5;
+        }
+
+        .category-option:first-child {
+            border-radius: 8px 8px 0 0;
+        }
+
+        .category-option:last-child {
+            border-radius: 0 0 8px 8px;
         }
 
         .part-badge {
@@ -953,7 +1010,23 @@
                 </a>
                 {% endif %}
                 <div class="video-content">
+                    {% if is_admin %}
+                    <div class="category-container">
+                        <span class="category-badge">{{ video.category }}</span>
+                        <span class="category-edit-icon" onclick="toggleCategoryDropdown(event, {{ video.id }}, '{{ video.category }}')">✏️</span>
+                        <div id="category-dropdown-{{ video.id }}" class="category-dropdown">
+                            <div class="category-option" onclick="updateCategory({{ video.id }}, 'Génériques TV')">Génériques TV</div>
+                            <div class="category-option" onclick="updateCategory({{ video.id }}, 'BO Films')">BO Films</div>
+                            <div class="category-option" onclick="updateCategory({{ video.id }}, 'Chansons/Standards')">Chansons/Standards</div>
+                            <div class="category-option" onclick="updateCategory({{ video.id }}, 'Jeux Vidéo')">Jeux Vidéo</div>
+                            <div class="category-option" onclick="updateCategory({{ video.id }}, 'Théorie/Analyse')">Théorie/Analyse</div>
+                            <div class="category-option" onclick="updateCategory({{ video.id }}, 'Interviews/Culture')">Interviews/Culture</div>
+                            <div class="category-option" onclick="updateCategory({{ video.id }}, 'Autres')">Autres</div>
+                        </div>
+                    </div>
+                    {% else %}
                     <span class="category-badge">{{ video.category }}</span>
+                    {% endif %}
                     {% if video.total_parts and video.total_parts > 1 %}
                     <span class="part-badge">Partie {{ video.part_number }}/{{ video.total_parts }}</span>
                     {% endif %}
@@ -1750,6 +1823,61 @@
                 alert('❌ Network error: ' + error.message);
             }
         }
+
+        // Category editing functions
+        function toggleCategoryDropdown(event, itemId, currentCategory) {
+            event.stopPropagation();
+
+            // Close all other dropdowns
+            document.querySelectorAll('.category-dropdown').forEach(dd => {
+                if (dd.id !== `category-dropdown-${itemId}`) {
+                    dd.classList.remove('show');
+                }
+            });
+
+            // Toggle this dropdown
+            const dropdown = document.getElementById(`category-dropdown-${itemId}`);
+            dropdown.classList.toggle('show');
+        }
+
+        async function updateCategory(itemId, newCategory) {
+            const view = new URLSearchParams(window.location.search).get('view') || 'songs';
+
+            try {
+                const response = await fetch('/api/update_category', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        id: itemId,
+                        category: newCategory,
+                        view: view
+                    })
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    // Close dropdown
+                    document.getElementById(`category-dropdown-${itemId}`).classList.remove('show');
+
+                    // Reload to show updated category
+                    location.reload();
+                } else {
+                    alert('❌ Error: ' + (result.error || 'Unknown error'));
+                }
+            } catch (error) {
+                alert('❌ Network error: ' + error.message);
+            }
+        }
+
+        // Close dropdowns when clicking outside
+        document.addEventListener('click', () => {
+            document.querySelectorAll('.category-dropdown').forEach(dd => {
+                dd.classList.remove('show');
+            });
+        });
     </script>
 </body>
 </html>

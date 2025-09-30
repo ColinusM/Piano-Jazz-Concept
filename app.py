@@ -63,7 +63,8 @@ def get_songs():
             s.featured_artists,
             s.context_notes,
             v.thumbnail_url,
-            v.video_type
+            v.video_type,
+            COALESCE(s.category, v.category) as category
         FROM songs s
         LEFT JOIN videos v ON s.video_id = v.id
         ORDER BY s.song_title ASC
@@ -126,7 +127,7 @@ def index():
         conn = sqlite3.connect(DATABASE_PATH)
         conn.row_factory = sqlite3.Row
         cursor = conn.cursor()
-        cursor.execute('SELECT id, title, description, url, published_at, thumbnail_url, video_type FROM videos ORDER BY title ASC')
+        cursor.execute('SELECT id, title, description, url, published_at, thumbnail_url, video_type, category FROM videos ORDER BY title ASC')
         videos = cursor.fetchall()
 
         video_list = []
@@ -159,7 +160,7 @@ def index():
                     'published_at': v['published_at'],
                     'thumbnail_url': v['thumbnail_url'],
                     'video_type': v['video_type'] or 'uncategorized',
-                    'category': categorize_video(v['title'], v['description']),
+                    'category': v['category'] or categorize_video(v['title'], v['description']),
                     'part_number': song_data['part_number'] or 1,
                     'total_parts': song_data['total_parts'] or 1,
                     'composer': song_data['composer'] or '',
@@ -187,7 +188,7 @@ def index():
                     'published_at': v['published_at'],
                     'thumbnail_url': v['thumbnail_url'],
                     'video_type': v['video_type'] or 'uncategorized',
-                    'category': 'No songs extracted yet',
+                    'category': v['category'] or categorize_video(v['title'], v['description']),
                     'part_number': 1,
                     'total_parts': 1,
                     'composer': '',
@@ -231,7 +232,7 @@ def index():
     # Process songs
     processed = []
     for s in songs:
-        cat = categorize_video(s['video_title'], s['description'])
+        cat = s['category'] or categorize_video(s['video_title'], s['description'])
 
         # Build URL with timestamp if available
         url = s['url']
@@ -712,6 +713,35 @@ def update_video_type():
         conn = sqlite3.connect(DATABASE_PATH)
         cursor = conn.cursor()
         cursor.execute('UPDATE videos SET video_type = ? WHERE id = ?', (video_type, video_id))
+        conn.commit()
+        conn.close()
+        return jsonify({'success': True})
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@app.route('/api/update_category', methods=['POST'])
+def update_category():
+    if not session.get('admin'):
+        return jsonify({'success': False, 'error': 'Unauthorized'}), 401
+
+    data = request.get_json()
+    item_id = data.get('id')
+    category = data.get('category')
+    view = data.get('view', 'songs')  # 'songs' or 'videos'
+
+    if not item_id or not category:
+        return jsonify({'success': False, 'error': 'Missing parameters'}), 400
+
+    try:
+        conn = sqlite3.connect(DATABASE_PATH)
+        cursor = conn.cursor()
+
+        # Update the appropriate table based on view
+        if view == 'videos':
+            cursor.execute('UPDATE videos SET category = ? WHERE id = ?', (category, item_id))
+        else:  # songs view
+            cursor.execute('UPDATE songs SET category = ? WHERE id = ?', (category, item_id))
+
         conn.commit()
         conn.close()
         return jsonify({'success': True})
