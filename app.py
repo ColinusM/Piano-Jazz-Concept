@@ -4,7 +4,7 @@ import sqlite3
 app = Flask(__name__)
 
 def get_songs():
-    conn = sqlite3.connect('piano_jazz_videos.db')
+    conn = sqlite3.connect('database/piano_jazz_videos.db')
     conn.row_factory = sqlite3.Row
     cursor = conn.cursor()
     cursor.execute('''
@@ -111,7 +111,8 @@ def index():
     elif video_type == 'single':
         processed = [s for s in processed if s['total_parts'] == 1 and s['category'] not in ['Interviews/Culture', 'Autres']]
     elif video_type == 'non-analysis':
-        processed = [s for s in processed if s['category'] in ['Interviews/Culture', 'Autres']]
+        # Only show first part of each video to avoid duplicates
+        processed = [s for s in processed if s['category'] in ['Interviews/Culture', 'Autres'] and s['part_number'] == 1]
 
     # Sort
     if sort == 'alpha':

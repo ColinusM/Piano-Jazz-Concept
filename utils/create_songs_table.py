@@ -32,7 +32,7 @@ def is_likely_song_name(text):
         return False
     return True
 
-conn = sqlite3.connect('piano_jazz_videos.db')
+conn = sqlite3.connect('../database/piano_jazz_videos.db')
 cursor = conn.cursor()
 
 # Create songs table

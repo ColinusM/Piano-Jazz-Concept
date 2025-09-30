@@ -7,7 +7,7 @@ API_KEY = 'AIzaSyBM3GSMWBG78DNAj5xVFkvKIZ687HVf3lM'
 CHANNEL_HANDLE = 'Pianojazzconcept'
 
 # Create database
-conn = sqlite3.connect('piano_jazz_videos.db')
+conn = sqlite3.connect('../database/piano_jazz_videos.db')
 cursor = conn.cursor()
 
 cursor.execute('''

@@ -1,7 +1,7 @@
 import sqlite3
 import re
 
-conn = sqlite3.connect('piano_jazz_videos.db')
+conn = sqlite3.connect('../database/piano_jazz_videos.db')
 cursor = conn.cursor()
 cursor.execute('SELECT id, title, description FROM videos')
 videos = cursor.fetchall()

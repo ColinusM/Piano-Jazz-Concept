@@ -4,7 +4,7 @@ Outputs a formatted list of all songs found.
 """
 import sqlite3
 
-conn = sqlite3.connect('piano_jazz_videos.db')
+conn = sqlite3.connect('../database/piano_jazz_videos.db')
 cursor = conn.cursor()
 
 # Get all videos with descriptions
