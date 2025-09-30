@@ -564,7 +564,7 @@ Be comprehensive BUT conservative! Only extract what's actually there.
 {guidance_section}"""
 
         response = openai_client.chat.completions.create(
-            model="gpt-4o-mini",
+            model="gpt-5-mini",
             messages=[
                 {"role": "system", "content": "You are a music metadata extraction expert specializing in jazz. Return only valid JSON arrays. Use your full training knowledge to add comprehensive metadata."},
                 {"role": "user", "content": prompt}
