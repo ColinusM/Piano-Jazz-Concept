@@ -45,34 +45,91 @@
             display: flex;
             gap: 0.8rem;
             justify-content: center;
+            align-items: center;
             flex-wrap: wrap;
             border-bottom: 1px solid #e8e8e8;
             box-shadow: 0 2px 5px rgba(0,0,0,0.03);
         }
 
+        .controls-primary {
+            display: flex;
+            gap: 1rem;
+            margin: 0 1.5rem;
+            order: -1;
+        }
+
+        :root {
+            --color-1: 0deg 100% 63%;
+            --color-2: 270deg 100% 63%;
+            --color-3: 210deg 100% 63%;
+            --color-4: 195deg 100% 63%;
+            --color-5: 90deg 100% 63%;
+        }
+
+        @keyframes rainbow {
+            0% { background-position: 0% }
+            100% { background-position: 200% }
+        }
+
         .btn {
-            padding: 0.7rem 1.4rem;
+            padding: 0.5rem 1rem;
             background: #fff;
             color: #666;
             text-decoration: none;
-            border-radius: 25px;
-            border: 2px solid #666;
+            border-radius: 20px;
+            border: 1px solid #ddd;
             cursor: pointer;
             transition: all 0.3s;
             font-weight: 500;
-            font-size: 0.95rem;
+            font-size: 0.85rem;
         }
 
         .btn:hover {
-            background: #666;
-            color: #fff;
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(150, 88, 138, 0.3);
+            border-color: #999;
+            color: #333;
+            transform: translateY(-1px);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
         }
 
         .btn.active {
-            background: #666;
-            color: #fff;
+            border-color: #666;
+            color: #333;
+            font-weight: 600;
+        }
+
+        .btn-rainbow {
+            position: relative;
+            padding: 0.9rem 2rem;
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #121213;
+            border: 2px solid transparent;
+            border-radius: 12px;
+            background: linear-gradient(#fff, #fff),
+                        linear-gradient(#fff 50%, rgba(255,255,255,0.6) 80%, rgba(0,0,0,0)),
+                        linear-gradient(90deg,
+                            hsl(var(--color-1)),
+                            hsl(var(--color-5)),
+                            hsl(var(--color-3)),
+                            hsl(var(--color-4)),
+                            hsl(var(--color-2))
+                        );
+            background-clip: padding-box, border-box, border-box;
+            background-origin: border-box;
+            background-size: 300%;
+            animation: rainbow 8s linear infinite;
+            transition: all 0.3s ease;
+        }
+
+        .btn-rainbow:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+        }
+
+        .btn-rainbow.active {
+            animation: rainbow 4s linear infinite;
+            border-width: 2px;
+            box-shadow: 0 2px 8px rgba(100, 100, 100, 0.15);
         }
 
         .container {
@@ -332,24 +389,41 @@
         }
 
         .reextract-btn {
-            background: #666;
-            color: #fff;
-            border: 1px solid #666;
-            padding: 0.25rem 0.5rem;
-            border-radius: 3px;
+            position: relative;
+            padding: 0.5rem 1rem;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: #121213;
+            border: 2px solid transparent;
+            border-radius: 8px;
+            background: linear-gradient(#fff, #fff),
+                        linear-gradient(#fff 50%, rgba(255,255,255,0.6) 80%, rgba(0,0,0,0)),
+                        linear-gradient(90deg,
+                            hsl(var(--color-1)),
+                            hsl(var(--color-5)),
+                            hsl(var(--color-3)),
+                            hsl(var(--color-4)),
+                            hsl(var(--color-2))
+                        );
+            background-clip: padding-box, border-box, border-box;
+            background-origin: border-box;
+            background-size: 300%;
+            animation: rainbow 8s linear infinite;
             cursor: pointer;
-            font-size: 0.75rem;
             display: inline-block;
             margin-right: 0.3rem;
+            transition: all 0.3s ease;
         }
 
         .reextract-btn:hover {
-            background: #666;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
         }
 
         .reextract-btn:disabled {
             opacity: 0.5;
             cursor: not-allowed;
+            animation: none;
         }
 
         .prompt-editor-section {
@@ -659,12 +733,14 @@
     </div>
 
     <div class="controls">
-        <a href="/?view=videos&sort={{ sort }}" class="btn" style="background: #666; border-color: #666; color: #fff;">
-            🎬 Show All Videos
-        </a>
-        <a href="/?view=songs&sort={{ sort }}" class="btn" style="background: #666; border-color: #666; color: #fff;">
-            🎵 Show All Songs
-        </a>
+        <div class="controls-primary">
+            <a href="/?view=videos&sort={{ sort }}" class="btn-rainbow {% if view == 'videos' %}active{% endif %}">
+                🎬 YouTube Videos
+            </a>
+            <a href="/?view=songs&sort={{ sort }}" class="btn-rainbow {% if view == 'songs' %}active{% endif %}">
+                🎵 AI Detected Songs
+            </a>
+        </div>
         <a href="/?sort=alpha&category={{ category }}&search={{ search }}&type={{ video_type }}&composer={{ composer_filter }}&performer={{ performer_filter }}&style={{ style_filter }}&era={{ era_filter }}" class="btn {% if sort == 'alpha' %}active{% endif %}">
             📝 Alphabétique
         </a>
@@ -894,7 +970,7 @@
                                placeholder="e.g. search Louis Cole album title &quot;Message&quot;"
                                title="Optional: Add specific instructions to guide the LLM extraction (e.g., 'focus on Brad Mehldau's solo', 'extract all chord changes', 'identify the specific album version')">
                         <button class="reextract-btn" onclick="reextractVideo({{ video.video_id }}, this)" title="Re-run LLM extraction with current guidance to update song metadata">
-                            🔄 Re-extract
+                            🤖 AI Analysis
                         </button>
                         <button class="reextract-btn" onclick="getTranscript('{{ video.url }}', {{ video.video_id }})" title="Fetch YouTube transcript (French/English) for additional context">
                             📜 Get Transcript
