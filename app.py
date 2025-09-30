@@ -14,27 +14,26 @@ def get_songs():
     cursor = conn.cursor()
     cursor.execute('''
         SELECT
-            s.id,
-            s.song_title,
-            s.composer,
-            s.timestamp,
-            s.part_number,
-            s.total_parts,
-            s.performer,
-            s.original_artist,
-            s.songwriters,
-            s.composition_year,
-            s.style,
-            s.era,
-            s.other_musicians,
-            s.additional_info,
-            v.title as video_title,
-            v.url,
-            v.description,
-            v.published_at
-        FROM songs s
-        JOIN videos v ON s.video_id = v.id
-        ORDER BY s.song_title ASC
+            id,
+            song_title,
+            composer,
+            timestamp,
+            part_number,
+            total_parts,
+            performer,
+            original_artist,
+            songwriters,
+            composition_year,
+            style,
+            era,
+            other_musicians,
+            additional_info,
+            video_title,
+            video_url as url,
+            video_description as description,
+            published_at
+        FROM songs
+        ORDER BY song_title ASC
     ''')
     songs = cursor.fetchall()
     conn.close()
