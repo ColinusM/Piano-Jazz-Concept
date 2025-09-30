@@ -190,6 +190,10 @@ def index():
 
         conn.close()
 
+        # Apply video_type filter to video_list
+        if video_type != 'all':
+            video_list = [v for v in video_list if v.get('video_type') == video_type]
+
         return render_template('index.html',
                              videos=video_list,
                              sort=sort,
