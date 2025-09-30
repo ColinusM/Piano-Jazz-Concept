@@ -241,6 +241,28 @@
             width: auto;
         }
 
+        .save-notification {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: #fff;
+            color: #333;
+            padding: 1rem 2rem;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            z-index: 10000;
+            opacity: 0;
+            transition: opacity 0.2s ease;
+            pointer-events: none;
+            font-size: 1rem;
+            font-weight: 500;
+        }
+
+        .save-notification.show {
+            opacity: 1;
+        }
+
         .video-content {
             padding: 1.5rem;
         }
@@ -754,6 +776,7 @@
         <span id="undoMessage"></span>
         <button class="undo-btn" onclick="undoLastChange()">↶ Annuler (Cmd+Z)</button>
     </div>
+    <div class="save-notification" id="saveNotification"></div>
     {% endif %}
 
     <label class="performance-toggle" title="Reduce image quality for better performance">
@@ -1498,7 +1521,24 @@
                 });
 
                 const result = await response.json();
-                if (!result.success) {
+                if (result.success) {
+                    // Show minimalist save notification
+                    const notification = document.getElementById('saveNotification');
+                    if (notification) {
+                        const typeLabels = {
+                            'uncategorized': '🔘 Uncategorized',
+                            'analysis': '🎹 Song Analysis',
+                            'non-analysis': '💬 Talk/Interview'
+                        };
+                        notification.textContent = `Saved: ${typeLabels[videoType] || videoType}`;
+                        notification.classList.add('show');
+
+                        // Hide after 1 second
+                        setTimeout(() => {
+                            notification.classList.remove('show');
+                        }, 1000);
+                    }
+                } else {
                     alert('Failed to update video type: ' + (result.error || 'Unknown error'));
                 }
             } catch (error) {
