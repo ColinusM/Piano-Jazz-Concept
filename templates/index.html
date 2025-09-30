@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Piano Jazz Concept - Catalogue des Vidéos</title>
+    <link rel="icon" type="image/png" href="/static/images/favicon.png">
     <style>
         * {
             margin: 0;
@@ -130,6 +131,14 @@
             animation: rainbow 4s linear infinite;
             border-width: 2px;
             box-shadow: 0 2px 8px rgba(100, 100, 100, 0.15);
+        }
+
+        .btn-rainbow .btn-icon {
+            height: 1.4rem;
+            width: auto;
+            vertical-align: middle;
+            margin-right: 0.5rem;
+            margin-top: -0.2rem;
         }
 
         .container {
@@ -735,7 +744,7 @@
     <div class="controls">
         <div class="controls-primary">
             <a href="/?view=videos&sort={{ sort }}" class="btn-rainbow {% if view == 'videos' %}active{% endif %}">
-                🎬 YouTube Videos
+                <img src="/static/images/youtube-icon.png" alt="YouTube" class="btn-icon"> YouTube Videos
             </a>
             <a href="/?view=songs&sort={{ sort }}" class="btn-rainbow {% if view == 'songs' %}active{% endif %}">
                 🎵 AI Detected Songs
@@ -815,7 +824,16 @@
                     {% if video.total_parts > 1 %}
                     <span class="part-badge">Partie {{ video.part_number }}/{{ video.total_parts }}</span>
                     {% endif %}
-                    <h3 class="video-title">{{ video.title }}</h3>
+                    <h3 class="video-title">
+                        {% if is_admin and view == 'songs' %}
+                        <span class="editable-field" data-id="{{ video.id }}" data-field="song_title">
+                            <span class="field-value">{{ video.title }}</span>
+                            <span class="edit-icon" onclick="editField(this)">✏️</span>
+                        </span>
+                        {% else %}
+                        {{ video.title }}
+                        {% endif %}
+                    </h3>
 
                     {% if video.extracted_songs %}
                     <p class="composer">🎵 Songs extracted:
