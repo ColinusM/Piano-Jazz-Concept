@@ -218,6 +218,29 @@
             height: 200px;
         }
 
+        .youtube-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #FF0000;
+            color: white;
+            text-decoration: none;
+            width: 40px;
+            height: 40px;
+            border-radius: 4px;
+            transition: opacity 0.2s ease;
+            margin: 0.5rem auto;
+        }
+
+        .youtube-btn:hover {
+            opacity: 0.8;
+        }
+
+        .youtube-btn-icon {
+            height: 20px;
+            width: auto;
+        }
+
         .video-content {
             padding: 1.5rem;
         }
@@ -783,7 +806,7 @@
                 <img src="/static/images/youtube-icon.png" alt="YouTube" class="btn-icon"> YouTube Videos
             </a>
             <a href="/?view=songs&sort={{ sort }}" class="btn-rainbow {% if view == 'songs' %}active{% endif %}">
-                🎵 AI Detected Songs
+                🎵 Songs
             </a>
         </div>
         <a href="/?sort=alpha&category={{ category }}&search={{ search }}&type={{ video_type }}&composer={{ composer_filter }}&performer={{ performer_filter }}&style={{ style_filter }}&era={{ era_filter }}" class="btn {% if sort == 'alpha' %}active{% endif %}">
@@ -857,6 +880,9 @@
                     <img src="{{ video.thumbnail_url }}" alt="{{ video.title }}" class="video-thumbnail" onclick="loadVideo(this.parentElement)">
                     <div class="play-button-overlay">▶</div>
                 </div>
+                <a href="{{ video.url }}" target="_blank" class="youtube-btn">
+                    <img src="/static/images/youtube-icon.png" alt="YouTube" class="youtube-btn-icon">
+                </a>
                 {% endif %}
                 <div class="video-content">
                     <span class="category-badge">{{ video.category }}</span>
@@ -1036,9 +1062,6 @@
                     </div>
                     {% endif %}
 
-                    <a href="{{ video.url }}" target="_blank" class="video-link">
-                        ▶ Voir sur YouTube
-                    </a>
                     {% if video.description and video.description|length > 150 %}
                     <p class="video-description truncated" id="desc-{{ loop.index }}">{{ video.description }}</p>
                     <span class="read-more-btn" onclick="toggleDescription({{ loop.index }})">
