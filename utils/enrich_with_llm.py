@@ -17,55 +17,49 @@ def enrich_song_metadata(video_title, video_description, song_title, current_com
     Returns dict with: performer, composition_year, songwriters, improved_composer
     """
 
-    prompt = f"""Analyze this Piano Jazz Concept video data and extract ALL structured metadata you can find.
+    prompt = f"""Analyze this Piano Jazz Concept video and extract metadata for THIS SPECIFIC SONG.
 
 Video Title: {video_title}
-Video Description: {video_description}
+Video Description (with timestamps): {video_description}
 Song Title: {song_title}
 Current Composer: {current_composer or "Unknown"}
 
-Extract EVERYTHING relevant from TWO SOURCES:
-1. PRIMARY: Information found in the text above
-2. SECONDARY: Your knowledge about the song/artist (if you're confident)
+IMPORTANT CONTEXT CLUES:
+- If video title has "feat." or mentions multiple artists (e.g., "feat. Jacob Collier et Mark Priore"), these are FEATURED artists being ANALYZED/COMPARED
+- When multiple songs are timestamped, each song may have a DIFFERENT composer from the featured list
+- Look at the song title and match it to the appropriate composer
+- The PERFORMER is who plays piano in this video (usually Étienne Guéreau or mentioned in description)
+- The COMPOSER is who originally wrote THIS specific song
 
-Fields to extract:
-- Performer/pianist name (who plays it in THIS video)
-- Composer/songwriter names (who wrote the original song)
-- Original artist (if it's a cover, e.g., Johnny Hallyday)
-- Featured artists (feat., avec, etc.)
-- Composition year or era (from text OR your knowledge if famous song)
-- Other musicians (bass, drums, etc.)
-- Album or recording info
-- Musical style/genre
-- Era/decade of the original song
-- Any other relevant musical metadata
+SMART MATCHING RULES:
+1. If the video compares works by multiple composers, match the song title to the correct composer
+2. Example: Video "feat. Collier et Priore" with songs "Orphée" and "Hajanga" - determine which composer wrote which song
+3. Use your knowledge of who wrote what song when available
+4. Don't just copy all names to all songs - BE SPECIFIC to THIS song
 
-Return JSON with ALL fields. Use your knowledge to fill in gaps when you're confident:
+Extract from TWO SOURCES:
+1. Text above (primary)
+2. Your knowledge (secondary - use for composition dates, correct attribution, etc.)
+
+Return JSON with ACCURATE, SONG-SPECIFIC data:
 {{
-    "performer": "name or null",
-    "composer": "name or null",
-    "songwriters": "names or null",
-    "original_artist": "name or null",
-    "featured_artists": ["list or null"],
+    "performer": "who plays piano in THIS video",
+    "composer": "who wrote THIS SPECIFIC song (not all featured artists)",
+    "songwriters": "who wrote THIS song",
+    "original_artist": "original artist if it's a cover",
+    "featured_artists": ["artists being compared/analyzed in video"],
     "composition_year": year_integer or null,
     "other_musicians": {{"instrument": "name"}} or null,
     "album": "name or null",
-    "style": "genre/style or null",
-    "era": "decade or era or null",
-    "additional_info": "any other relevant info or null",
+    "style": "genre/style",
+    "era": "decade or era",
+    "additional_info": "relevant info",
     "data_source": "text_only|text_and_knowledge|knowledge_only"
 }}
 
-Be comprehensive - use both the text AND your training knowledge!"""
+Be SMART and SPECIFIC - match the song to its actual composer!"""
 
     try:
-        # DEBUG: Print the exact prompt being sent
-        print("\n" + "="*80)
-        print("🔍 PROMPT SENT TO LLM:")
-        print("="*80)
-        print(prompt)
-        print("="*80)
-
         response = client.chat.completions.create(
             model="gpt-4o-mini",
             messages=[
@@ -77,13 +71,6 @@ Be comprehensive - use both the text AND your training knowledge!"""
         )
 
         response_content = response.choices[0].message.content
-
-        # DEBUG: Print the exact response received
-        print("\n🤖 LLM RESPONSE:")
-        print("="*80)
-        print(response_content)
-        print("="*80)
-
         result = json.loads(response_content)
         return result
 
@@ -124,7 +111,7 @@ def main():
 
     print("ℹ Database schema updated")
 
-    # Get specific songs for debug testing
+    # Get songs from Jacob Collier video
     cursor.execute('''
         SELECT
             s.id,
@@ -134,8 +121,8 @@ def main():
             v.description
         FROM songs s
         JOIN videos v ON s.video_id = v.id
-        WHERE v.title LIKE '%Que je t''aime%'
-        LIMIT 1
+        WHERE v.id = 392
+        ORDER BY s.id
     ''')
 
     songs = cursor.fetchall()
