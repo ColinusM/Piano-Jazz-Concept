@@ -136,7 +136,7 @@ def index():
                 video_list.append({
                     'id': None,
                     'video_id': v['id'],
-                    'title': song_data['song_title'] or v['title'],
+                    'title': v['title'],
                     'url': v['url'],
                     'video_title': v['title'],
                     'description': v['description'],
