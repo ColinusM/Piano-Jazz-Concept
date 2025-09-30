@@ -112,35 +112,73 @@ def index():
         cursor = conn.cursor()
         cursor.execute('SELECT id, title, description, url, published_at, thumbnail_url, video_type FROM videos ORDER BY title ASC')
         videos = cursor.fetchall()
-        conn.close()
 
         video_list = []
         for v in videos:
-            video_list.append({
-                'id': None,
-                'video_id': v['id'],
-                'title': v['title'],
-                'url': v['url'],
-                'video_title': v['title'],
-                'description': v['description'],
-                'published_at': v['published_at'],
-                'thumbnail_url': v['thumbnail_url'],
-                'video_type': v['video_type'] or 'uncategorized',
-                'category': 'No songs extracted yet',
-                'part_number': 1,
-                'total_parts': 1,
-                'composer': '',
-                'performer': '',
-                'original_artist': '',
-                'composition_year': None,
-                'style': '',
-                'era': '',
-                'album': '',
-                'record_label': '',
-                'recording_year': None,
-                'featured_artists': None,
-                'context_notes': 'Click Re-extract to populate metadata'
-            })
+            # Try to fetch extracted song data for this video
+            cursor.execute('''SELECT song_title, composer, performer, original_artist,
+                            composition_year, style, era, album, record_label,
+                            recording_year, featured_artists, context_notes,
+                            part_number, total_parts
+                            FROM songs WHERE video_id = ? LIMIT 1''', (v['id'],))
+            song_data = cursor.fetchone()
+
+            if song_data:
+                # Use extracted song metadata
+                video_list.append({
+                    'id': None,
+                    'video_id': v['id'],
+                    'title': song_data['song_title'] or v['title'],
+                    'url': v['url'],
+                    'video_title': v['title'],
+                    'description': v['description'],
+                    'published_at': v['published_at'],
+                    'thumbnail_url': v['thumbnail_url'],
+                    'video_type': v['video_type'] or 'uncategorized',
+                    'category': categorize_video(v['title'], v['description']),
+                    'part_number': song_data['part_number'] or 1,
+                    'total_parts': song_data['total_parts'] or 1,
+                    'composer': song_data['composer'] or '',
+                    'performer': song_data['performer'] or '',
+                    'original_artist': song_data['original_artist'] or '',
+                    'composition_year': song_data['composition_year'],
+                    'style': song_data['style'] or '',
+                    'era': song_data['era'] or '',
+                    'album': song_data['album'] or '',
+                    'record_label': song_data['record_label'] or '',
+                    'recording_year': song_data['recording_year'],
+                    'featured_artists': song_data['featured_artists'],
+                    'context_notes': song_data['context_notes'] or ''
+                })
+            else:
+                # No songs extracted yet - show placeholder
+                video_list.append({
+                    'id': None,
+                    'video_id': v['id'],
+                    'title': v['title'],
+                    'url': v['url'],
+                    'video_title': v['title'],
+                    'description': v['description'],
+                    'published_at': v['published_at'],
+                    'thumbnail_url': v['thumbnail_url'],
+                    'video_type': v['video_type'] or 'uncategorized',
+                    'category': 'No songs extracted yet',
+                    'part_number': 1,
+                    'total_parts': 1,
+                    'composer': '',
+                    'performer': '',
+                    'original_artist': '',
+                    'composition_year': None,
+                    'style': '',
+                    'era': '',
+                    'album': '',
+                    'record_label': '',
+                    'recording_year': None,
+                    'featured_artists': None,
+                    'context_notes': 'Click Re-extract to populate metadata'
+                })
+
+        conn.close()
 
         return render_template('index.html',
                              videos=video_list,
