@@ -3,6 +3,8 @@ import sqlite3
 import json
 import sys
 import re
+import os
+import shutil
 sys.path.append('config')
 from admin_config import ADMIN_USERNAME, ADMIN_PASSWORD, AUTO_LOGIN, SECRET_KEY
 from openai import OpenAI
@@ -11,13 +13,27 @@ from youtube_transcript_api import YouTubeTranscriptApi
 app = Flask(__name__)
 app.secret_key = SECRET_KEY
 
+# Database path - use persistent disk on Render, local path otherwise
+if os.path.exists('/data'):
+    DATABASE_PATH = '/data/piano_jazz_videos.db'
+    # Copy database to persistent disk on first run
+    if not os.path.exists(DATABASE_PATH):
+        os.makedirs('/data', exist_ok=True)
+        if os.path.exists('database/piano_jazz_videos.db'):
+            shutil.copy2('database/piano_jazz_videos.db', DATABASE_PATH)
+            print(f"✓ Database copied to persistent disk: {DATABASE_PATH}")
+else:
+    DATABASE_PATH = 'database/piano_jazz_videos.db'
+
+print(f"Using database at: {DATABASE_PATH}")
+
 # OpenAI client for re-extraction
 openai_client = OpenAI(
     api_key="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"
 )
 
 def get_songs():
-    conn = sqlite3.connect('database/piano_jazz_videos.db')
+    conn = sqlite3.connect(DATABASE_PATH)
     conn.row_factory = sqlite3.Row
     cursor = conn.cursor()
     cursor.execute('''
@@ -107,7 +123,7 @@ def index():
 
     # If view=videos or no songs, show videos instead for re-extraction
     if (view == 'videos' or not songs) and session.get('admin'):
-        conn = sqlite3.connect('database/piano_jazz_videos.db')
+        conn = sqlite3.connect(DATABASE_PATH)
         conn.row_factory = sqlite3.Row
         cursor = conn.cursor()
         cursor.execute('SELECT id, title, description, url, published_at, thumbnail_url, video_type FROM videos ORDER BY title ASC')
@@ -385,7 +401,7 @@ def update_song():
         return jsonify({'success': False, 'error': 'Invalid field'}), 400
 
     try:
-        conn = sqlite3.connect('database/piano_jazz_videos.db', timeout=10.0)
+        conn = sqlite3.connect(DATABASE_PATH, timeout=10.0)
         cursor = conn.cursor()
         cursor.execute(f'UPDATE songs SET {field} = ? WHERE id = ?', (value, song_id))
         conn.commit()
@@ -449,7 +465,7 @@ def reextract_video():
         return jsonify({'success': False, 'error': 'Missing video_id'}), 400
 
     try:
-        conn = sqlite3.connect('database/piano_jazz_videos.db', timeout=10.0)
+        conn = sqlite3.connect(DATABASE_PATH, timeout=10.0)
         cursor = conn.cursor()
 
         # Get video data
@@ -693,7 +709,7 @@ def update_video_type():
         return jsonify({'success': False, 'error': 'Missing parameters'}), 400
 
     try:
-        conn = sqlite3.connect('database/piano_jazz_videos.db')
+        conn = sqlite3.connect(DATABASE_PATH)
         cursor = conn.cursor()
         cursor.execute('UPDATE videos SET video_type = ? WHERE id = ?', (video_type, video_id))
         conn.commit()
@@ -714,7 +730,7 @@ def delete_song():
         return jsonify({'success': False, 'error': 'Missing song_id'}), 400
 
     try:
-        conn = sqlite3.connect('database/piano_jazz_videos.db', timeout=10.0)
+        conn = sqlite3.connect(DATABASE_PATH, timeout=10.0)
         cursor = conn.cursor()
 
         # Soft delete: mark as deleted instead of actually deleting
@@ -738,7 +754,7 @@ def restore_song():
         return jsonify({'success': False, 'error': 'Missing song_id'}), 400
 
     try:
-        conn = sqlite3.connect('database/piano_jazz_videos.db', timeout=10.0)
+        conn = sqlite3.connect(DATABASE_PATH, timeout=10.0)
         cursor = conn.cursor()
 
         # Restore: unmark as deleted
@@ -763,7 +779,7 @@ def create_song():
         return jsonify({'success': False, 'error': 'Missing video_id or song_title'}), 400
 
     try:
-        conn = sqlite3.connect('database/piano_jazz_videos.db', timeout=10.0)
+        conn = sqlite3.connect(DATABASE_PATH, timeout=10.0)
         cursor = conn.cursor()
 
         # Get video information

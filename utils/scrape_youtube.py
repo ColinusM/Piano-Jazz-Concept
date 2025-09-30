@@ -2,12 +2,17 @@ import requests
 import sqlite3
 import json
 import html
+import os
 
 API_KEY = 'AIzaSyBM3GSMWBG78DNAj5xVFkvKIZ687HVf3lM'
 CHANNEL_HANDLE = 'Pianojazzconcept'
 
+# Use persistent disk on Render, local path otherwise
+db_path = '/data/piano_jazz_videos.db' if os.path.exists('/data') else '../database/piano_jazz_videos.db'
+print(f"Using database at: {db_path}")
+
 # Create database
-conn = sqlite3.connect('../database/piano_jazz_videos.db')
+conn = sqlite3.connect(db_path)
 cursor = conn.cursor()
 
 cursor.execute('''

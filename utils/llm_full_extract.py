@@ -4,6 +4,7 @@ No pre-parsing - just raw title + description → LLM → structured data.
 """
 import sqlite3
 import json
+import os
 from openai import OpenAI
 
 client = OpenAI(
@@ -129,7 +130,10 @@ Be comprehensive BUT conservative! Only extract what's actually there."""
         return []
 
 def main():
-    conn = sqlite3.connect('../database/piano_jazz_videos.db')
+    # Use persistent disk on Render, local path otherwise
+    db_path = '/data/piano_jazz_videos.db' if os.path.exists('/data') else '../database/piano_jazz_videos.db'
+    print(f"Using database at: {db_path}")
+    conn = sqlite3.connect(db_path)
     cursor = conn.cursor()
 
     # Clear existing songs table
