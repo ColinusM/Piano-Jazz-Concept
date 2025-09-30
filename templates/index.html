@@ -786,16 +786,56 @@
                     </p>
                     {% endif %}
 
-                    {% if video.album %}
-                    <p class="composer">💿 Album: {{ video.album }}</p>
+                    {% if video.era or is_admin %}
+                    <p class="composer">⏰ Era:
+                        {% if is_admin %}
+                        <span class="editable-field" data-id="{{ video.id }}" data-field="era">
+                            <span class="field-value">{{ video.era or 'Non renseigné' }}</span>
+                            <span class="edit-icon" onclick="editField(this)">✏️</span>
+                        </span>
+                        {% else %}
+                        {{ video.era }}
+                        {% endif %}
+                    </p>
                     {% endif %}
 
-                    {% if video.recording_year %}
-                    <p class="composer">🎙️ Recording: {{ video.recording_year }}</p>
+                    {% if video.album or is_admin %}
+                    <p class="composer">💿 Album:
+                        {% if is_admin %}
+                        <span class="editable-field" data-id="{{ video.id }}" data-field="album">
+                            <span class="field-value">{{ video.album or 'Non renseigné' }}</span>
+                            <span class="edit-icon" onclick="editField(this)">✏️</span>
+                        </span>
+                        {% else %}
+                        {{ video.album }}
+                        {% endif %}
+                    </p>
                     {% endif %}
 
-                    {% if video.record_label %}
-                    <p class="composer">🏷️ Label: {{ video.record_label }}</p>
+                    {% if video.recording_year or is_admin %}
+                    <p class="composer">🎙️ Recording:
+                        {% if is_admin %}
+                        <span class="editable-field" data-id="{{ video.id }}" data-field="recording_year">
+                            <span class="field-value">{{ video.recording_year or 'Non renseigné' }}</span>
+                            <span class="edit-icon" onclick="editField(this)">✏️</span>
+                        </span>
+                        {% else %}
+                        {{ video.recording_year }}
+                        {% endif %}
+                    </p>
+                    {% endif %}
+
+                    {% if video.record_label or is_admin %}
+                    <p class="composer">🏷️ Label:
+                        {% if is_admin %}
+                        <span class="editable-field" data-id="{{ video.id }}" data-field="record_label">
+                            <span class="field-value">{{ video.record_label or 'Non renseigné' }}</span>
+                            <span class="edit-icon" onclick="editField(this)">✏️</span>
+                        </span>
+                        {% else %}
+                        {{ video.record_label }}
+                        {% endif %}
+                    </p>
                     {% endif %}
 
                     {% if video.featured_artists %}
@@ -813,8 +853,8 @@
                     {% if is_admin %}
                     <div style="margin-top: 0.5rem;">
                         <div style="margin-bottom: 0.5rem;">
-                            <label style="font-size: 0.85rem; color: #888; margin-right: 0.5rem;">Video Type:</label>
-                            <select id="video-type-{{ video.video_id }}" onchange="updateVideoType({{ video.video_id }}, this.value)" style="background: #1a1a1a; color: #e0e0e0; border: 1px solid #333; border-radius: 4px; padding: 0.3rem; font-size: 0.85rem;">
+                            <label style="font-size: 0.85rem; color: #888; margin-right: 0.5rem;" title="Categorize the video content type">Video Type:</label>
+                            <select id="video-type-{{ video.video_id }}" onchange="updateVideoType({{ video.video_id }}, this.value)" style="background: #1a1a1a; color: #e0e0e0; border: 1px solid #333; border-radius: 4px; padding: 0.3rem; font-size: 0.85rem;" title="Analysis = Video analyzing specific songs/pieces; Non-analysis = Interviews, talks, theory discussions without specific song focus">
                                 <option value="uncategorized" {% if video.video_type == 'uncategorized' %}selected{% endif %}>🔘 Uncategorized</option>
                                 <option value="analysis" {% if video.video_type == 'analysis' %}selected{% endif %}>🎹 Song Analysis</option>
                                 <option value="non-analysis" {% if video.video_type == 'non-analysis' %}selected{% endif %}>💬 Talk/Interview</option>
@@ -823,11 +863,12 @@
                         <input type="text"
                                class="prompt-guidance-input"
                                id="guidance-{{ video.video_id }}"
-                               placeholder="Add guidance (e.g., 'focus on solos', 'extract all timestamps')...">
-                        <button class="reextract-btn" onclick="reextractVideo({{ video.video_id }}, this)">
+                               placeholder="Add guidance (e.g., 'focus on solos', 'extract all timestamps')..."
+                               title="Optional: Add specific instructions to guide the LLM extraction (e.g., 'focus on Brad Mehldau's solo', 'extract all chord changes', 'identify the specific album version')">
+                        <button class="reextract-btn" onclick="reextractVideo({{ video.video_id }}, this)" title="Re-run LLM extraction with current guidance to update song metadata">
                             🔄 Re-extract
                         </button>
-                        <button class="reextract-btn" onclick="getTranscript('{{ video.url }}', {{ video.video_id }})" style="margin-top: 0.5rem;">
+                        <button class="reextract-btn" onclick="getTranscript('{{ video.url }}', {{ video.video_id }})" style="margin-top: 0.5rem;" title="Fetch YouTube transcript (French/English) for additional context">
                             📜 Get Transcript
                         </button>
                         <div id="transcript-{{ video.video_id }}" class="transcript-display" style="display: none; margin-top: 0.5rem; background: #1a1a1a; padding: 1rem; border-radius: 4px; max-height: 300px; overflow-y: auto; font-size: 0.85rem; line-height: 1.6; white-space: pre-wrap;"></div>
