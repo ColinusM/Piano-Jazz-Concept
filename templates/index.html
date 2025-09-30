@@ -711,16 +711,15 @@
                     {% if video.total_parts > 1 %}
                     <span class="part-badge">Partie {{ video.part_number }}/{{ video.total_parts }}</span>
                     {% endif %}
-                    <h3 class="video-title">
-                        {% if is_admin %}
-                        <span class="editable-field" data-id="{{ video.id }}" data-field="song_title">
-                            <span class="field-value">{{ video.title }}</span>
-                            <span class="edit-icon" onclick="editField(this)">✏️</span>
-                        </span>
-                        {% else %}
-                        {{ video.title }}
-                        {% endif %}
-                    </h3>
+                    <h3 class="video-title">{{ video.video_title }}</h3>
+
+                    {% if video.extracted_songs %}
+                    <p class="composer">🎵 Songs extracted:
+                        {% for song in video.extracted_songs %}
+                        <a href="/?view=songs&search={{ song.song_title }}" target="_blank" style="color: #666; text-decoration: underline; margin-right: 0.5rem;">{{ song.song_title }}</a>{% if not loop.last %},{% endif %}
+                        {% endfor %}
+                    </p>
+                    {% endif %}
 
                     {% if video.original_artist or is_admin %}
                     <p class="composer">🎤 Original:

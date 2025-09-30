@@ -39,6 +39,8 @@ To restart:
 lsof -ti:5000 | xargs kill -9 2>/dev/null && python -u app.py 2>&1 | tee -a /tmp/flask.log
 ```
 
+**IMPORTANT: Check for background processes.** There are often multiple Flask processes running. Before restarting, verify which shell IDs are active. Kill all competing processes to avoid port conflicts.
+
 ## Data Pipeline
 
 The application follows a multi-step data pipeline that must be run in order:
@@ -123,10 +125,15 @@ The application includes admin mode with enhanced features (requires login via `
 ### Per-Song Management
 Each song card in admin mode includes:
 - **Inline editing**: Click ✏️ icon to edit any field (composer, performer, style, etc.)
+  - Editable fields defined in `app.py:366-368` (allowed_fields list)
+  - Updates saved to database via `/api/update_song` endpoint
 - **Undo functionality**: Cmd+Z or click undo notification to revert last change
 - **Prompt guidance field**: Add extraction hints before re-extracting (e.g., "focus on solos")
 - **Re-extract button**: Re-run LLM extraction for specific video with optional guidance
+  - Uses same prompt as `llm_full_extract.py` (see `app.py:456-534`)
+  - Deletes old songs and inserts new extractions
 - **Get Transcript button**: Fetch YouTube transcript (French/English with fallback) for analysis
+  - Implementation in `app.py:612-667`
 
 ### Filtering and Display
 - **Show All Videos button**: Resets all filters to display complete song catalog
@@ -147,3 +154,14 @@ The app can fetch transcripts using `youtube-transcript-api` library (v1.2.2+). 
 4. English auto-generated transcript (translated to French)
 
 Transcripts are fetched on-demand (not stored in database) to avoid YouTube API rate limits.
+
+## Security Notes
+
+**CRITICAL:** The OpenAI API key is hardcoded in `app.py:16`. Before committing changes or deploying, ensure sensitive credentials are moved to environment variables or secure config files not checked into version control.
+
+## UI Design
+
+Recent design changes (as of commit 400b998):
+- Minimal grey/white color scheme throughout
+- Compact, minimalist buttons for admin actions
+- Clean visual hierarchy for song metadata display

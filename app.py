@@ -115,15 +115,23 @@ def index():
 
         video_list = []
         for v in videos:
-            # Try to fetch extracted song data for this video
-            cursor.execute('''SELECT song_title, composer, performer, original_artist,
+            # Try to fetch ALL extracted songs for this video
+            cursor.execute('''SELECT id, song_title, composer, performer, original_artist,
                             composition_year, style, era, album, record_label,
                             recording_year, featured_artists, context_notes,
                             part_number, total_parts
-                            FROM songs WHERE video_id = ? LIMIT 1''', (v['id'],))
-            song_data = cursor.fetchone()
+                            FROM songs WHERE video_id = ? ORDER BY part_number''', (v['id'],))
+            all_songs = cursor.fetchall()
 
-            if song_data:
+            if all_songs:
+                # Get first song for metadata display
+                song_data = all_songs[0]
+                # Convert all_songs to list of dicts
+                songs_list = [{
+                    'id': s['id'],
+                    'song_title': s['song_title']
+                } for s in all_songs]
+
                 # Use extracted song metadata
                 video_list.append({
                     'id': None,
@@ -148,7 +156,8 @@ def index():
                     'record_label': song_data['record_label'] or '',
                     'recording_year': song_data['recording_year'],
                     'featured_artists': song_data['featured_artists'],
-                    'context_notes': song_data['context_notes'] or ''
+                    'context_notes': song_data['context_notes'] or '',
+                    'extracted_songs': songs_list
                 })
             else:
                 # No songs extracted yet - show placeholder
@@ -175,7 +184,8 @@ def index():
                     'record_label': '',
                     'recording_year': None,
                     'featured_artists': None,
-                    'context_notes': 'Click Re-extract to populate metadata'
+                    'context_notes': 'Click Re-extract to populate metadata',
+                    'extracted_songs': []
                 })
 
         conn.close()
