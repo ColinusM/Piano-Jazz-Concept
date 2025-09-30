@@ -120,7 +120,7 @@ def index():
                             composition_year, style, era, album, record_label,
                             recording_year, featured_artists, context_notes,
                             part_number, total_parts
-                            FROM songs WHERE video_id = ? ORDER BY part_number''', (v['id'],))
+                            FROM songs WHERE video_id = ? AND (deleted IS NULL OR deleted = 0) ORDER BY part_number''', (v['id'],))
             all_songs = cursor.fetchall()
 
             if all_songs:
@@ -694,6 +694,54 @@ def update_video_type():
         cursor.execute('UPDATE videos SET video_type = ? WHERE id = ?', (video_type, video_id))
         conn.commit()
         conn.close()
+        return jsonify({'success': True})
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@app.route('/api/delete_song', methods=['POST'])
+def delete_song():
+    if not session.get('admin'):
+        return jsonify({'success': False, 'error': 'Unauthorized'}), 401
+
+    data = request.get_json()
+    song_id = data.get('song_id')
+
+    if not song_id:
+        return jsonify({'success': False, 'error': 'Missing song_id'}), 400
+
+    try:
+        conn = sqlite3.connect('database/piano_jazz_videos.db', timeout=10.0)
+        cursor = conn.cursor()
+
+        # Soft delete: mark as deleted instead of actually deleting
+        cursor.execute('UPDATE songs SET deleted = 1 WHERE id = ?', (song_id,))
+        conn.commit()
+        conn.close()
+
+        return jsonify({'success': True})
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@app.route('/api/restore_song', methods=['POST'])
+def restore_song():
+    if not session.get('admin'):
+        return jsonify({'success': False, 'error': 'Unauthorized'}), 401
+
+    data = request.get_json()
+    song_id = data.get('song_id')
+
+    if not song_id:
+        return jsonify({'success': False, 'error': 'Missing song_id'}), 400
+
+    try:
+        conn = sqlite3.connect('database/piano_jazz_videos.db', timeout=10.0)
+        cursor = conn.cursor()
+
+        # Restore: unmark as deleted
+        cursor.execute('UPDATE songs SET deleted = 0 WHERE id = ?', (song_id,))
+        conn.commit()
+        conn.close()
+
         return jsonify({'success': True})
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)}), 500
