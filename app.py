@@ -27,6 +27,30 @@ else:
 
 print(f"Using database at: {DATABASE_PATH}")
 
+# Auto-migration: Add category columns if they don't exist
+def ensure_category_columns():
+    conn = sqlite3.connect(DATABASE_PATH)
+    cursor = conn.cursor()
+
+    # Check and add category column to videos table
+    cursor.execute("PRAGMA table_info(videos)")
+    videos_columns = [col[1] for col in cursor.fetchall()]
+    if 'category' not in videos_columns:
+        cursor.execute("ALTER TABLE videos ADD COLUMN category TEXT DEFAULT NULL")
+        print("✓ Added category column to videos table")
+
+    # Check and add category column to songs table
+    cursor.execute("PRAGMA table_info(songs)")
+    songs_columns = [col[1] for col in cursor.fetchall()]
+    if 'category' not in songs_columns:
+        cursor.execute("ALTER TABLE songs ADD COLUMN category TEXT DEFAULT NULL")
+        print("✓ Added category column to songs table")
+
+    conn.commit()
+    conn.close()
+
+ensure_category_columns()
+
 # OpenAI client for re-extraction
 openai_client = OpenAI(
     api_key="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"
