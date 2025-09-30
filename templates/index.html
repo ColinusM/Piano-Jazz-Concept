@@ -159,11 +159,28 @@
         .video-description {
             color: #999;
             font-size: 0.9rem;
-            margin-top: 0.5rem;
+            margin-top: 0.8rem;
+            line-height: 1.5;
+        }
+
+        .video-description.truncated {
             display: -webkit-box;
             -webkit-line-clamp: 3;
             -webkit-box-orient: vertical;
             overflow: hidden;
+        }
+
+        .read-more-btn {
+            color: #4a9eff;
+            cursor: pointer;
+            font-size: 0.85rem;
+            margin-top: 0.3rem;
+            display: inline-block;
+        }
+
+        .read-more-btn:hover {
+            color: #6eb3ff;
+            text-decoration: underline;
         }
 
         select {
@@ -227,21 +244,28 @@
     </div>
 
     <div class="controls">
-        <a href="/?sort=alpha&category={{ category }}&search={{ search }}" class="btn {% if sort == 'alpha' %}active{% endif %}">
+        <a href="/?sort=alpha&category={{ category }}&search={{ search }}&type={{ video_type }}" class="btn {% if sort == 'alpha' %}active{% endif %}">
             📝 Alphabétique
         </a>
-        <a href="/?sort=theme&category={{ category }}&search={{ search }}" class="btn {% if sort == 'theme' %}active{% endif %}">
+        <a href="/?sort=theme&category={{ category }}&search={{ search }}&type={{ video_type }}" class="btn {% if sort == 'theme' %}active{% endif %}">
             🎵 Thématique
         </a>
-        <a href="/?sort=date&category={{ category }}&search={{ search }}" class="btn {% if sort == 'date' %}active{% endif %}">
+        <a href="/?sort=date&category={{ category }}&search={{ search }}&type={{ video_type }}" class="btn {% if sort == 'date' %}active{% endif %}">
             📅 Date
         </a>
 
-        <select onchange="window.location.href='/?sort={{ sort }}&category='+this.value+'&search={{ search }}'">
+        <select onchange="window.location.href='/?sort={{ sort }}&category='+this.value+'&search={{ search }}&type={{ video_type }}'">
             <option value="all" {% if category == 'all' %}selected{% endif %}>Toutes catégories</option>
             {% for cat in categories %}
             <option value="{{ cat }}" {% if category == cat %}selected{% endif %}>{{ cat }}</option>
             {% endfor %}
+        </select>
+
+        <select onchange="window.location.href='/?sort={{ sort }}&category={{ category }}&search={{ search }}&type='+this.value">
+            <option value="all" {% if video_type == 'all' %}selected{% endif %}>Tous types</option>
+            <option value="compilation" {% if video_type == 'compilation' %}selected{% endif %}>📦 Compilations</option>
+            <option value="single" {% if video_type == 'single' %}selected{% endif %}>🎵 Morceaux uniques</option>
+            <option value="non-analysis" {% if video_type == 'non-analysis' %}selected{% endif %}>💬 Non-analyse</option>
         </select>
     </div>
 
@@ -268,10 +292,33 @@
                     <a href="{{ video.url }}" target="_blank" class="video-link">
                         ▶ Voir sur YouTube
                     </a>
+                    {% if video.description and video.description|length > 150 %}
+                    <p class="video-description truncated" id="desc-{{ loop.index }}">{{ video.description }}</p>
+                    <span class="read-more-btn" onclick="toggleDescription({{ loop.index }})">
+                        <span id="btn-{{ loop.index }}">Lire la suite</span>
+                    </span>
+                    {% elif video.description %}
+                    <p class="video-description">{{ video.description }}</p>
+                    {% endif %}
                 </div>
             </div>
             {% endfor %}
         </div>
     </div>
+
+    <script>
+        function toggleDescription(id) {
+            const desc = document.getElementById('desc-' + id);
+            const btn = document.getElementById('btn-' + id);
+
+            if (desc.classList.contains('truncated')) {
+                desc.classList.remove('truncated');
+                btn.textContent = 'Réduire';
+            } else {
+                desc.classList.add('truncated');
+                btn.textContent = 'Lire la suite';
+            }
+        }
+    </script>
 </body>
 </html>

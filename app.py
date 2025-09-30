@@ -63,6 +63,7 @@ def index():
     sort = request.args.get('sort', 'alpha')
     category = request.args.get('category', 'all')
     search = request.args.get('search', '').strip()
+    video_type = request.args.get('type', 'all')  # all, compilation, single, non-analysis
 
     songs = get_songs()
 
@@ -104,6 +105,14 @@ def index():
     if category != 'all':
         processed = [s for s in processed if s['category'] == category]
 
+    # Filter by video type
+    if video_type == 'compilation':
+        processed = [s for s in processed if s['total_parts'] > 1]
+    elif video_type == 'single':
+        processed = [s for s in processed if s['total_parts'] == 1 and s['category'] not in ['Interviews/Culture', 'Autres']]
+    elif video_type == 'non-analysis':
+        processed = [s for s in processed if s['category'] in ['Interviews/Culture', 'Autres']]
+
     # Sort
     if sort == 'alpha':
         processed.sort(key=lambda x: x['title'].lower())
@@ -120,7 +129,8 @@ def index():
                          sort=sort,
                          category=category,
                          categories=all_categories,
-                         search=search)
+                         search=search,
+                         video_type=video_type)
 
 if __name__ == '__main__':
     app.run(debug=True, port=5000)
