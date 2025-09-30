@@ -466,6 +466,82 @@
             transform: translateY(-50%);
             color: #999;
         }
+
+        .alphabet-nav {
+            background: #fff;
+            padding: 0.8rem 1rem;
+            border-bottom: 1px solid #e8e8e8;
+            display: flex;
+            justify-content: center;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+
+        .letter-btn {
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #fff;
+            color: #96588a;
+            border: 1px solid #e8e8e8;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: 600;
+            transition: all 0.2s;
+            text-decoration: none;
+        }
+
+        .letter-btn:hover {
+            background: #96588a;
+            color: #fff;
+            border-color: #96588a;
+            transform: scale(1.1);
+        }
+
+        .letter-btn.inactive {
+            opacity: 0.3;
+            cursor: default;
+            pointer-events: none;
+        }
+
+        .back-to-top {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            width: 50px;
+            height: 50px;
+            background: linear-gradient(135deg, #ffc9c9 0%, #ffb3c1 100%);
+            color: #96588a;
+            border: 2px solid #96588a;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 1.5rem;
+            font-weight: bold;
+            box-shadow: 0 4px 12px rgba(150, 88, 138, 0.3);
+            transition: all 0.3s;
+            z-index: 1001;
+        }
+
+        .back-to-top:hover {
+            background: #96588a;
+            color: #fff;
+            transform: translateY(-4px);
+            box-shadow: 0 6px 16px rgba(150, 88, 138, 0.4);
+        }
+
+        .letter-section {
+            scroll-margin-top: 60px;
+        }
     </style>
 </head>
 <body>
@@ -510,6 +586,10 @@
             <input type="text" name="search" class="search-input" placeholder="Rechercher par titre, compositeur, artiste..." value="{{ search }}">
             <span class="search-icon">🔍</span>
         </form>
+    </div>
+
+    <div class="alphabet-nav" id="alphabetNav">
+        <!-- Letters will be inserted here by JavaScript -->
     </div>
 
     <div class="controls">
@@ -572,6 +652,8 @@
         </select>
     </div>
 
+    <div class="back-to-top" onclick="scrollToTop()" title="Back to top">↑</div>
+
     <div class="container">
         <div class="stats">
             <p>{{ videos|length }} {% if view == 'videos' %}vidéo(s){% else %}morceau(x){% endif %} trouvé(s)</p>
@@ -579,7 +661,7 @@
 
         <div class="video-grid">
             {% for video in videos %}
-            <div class="video-card">
+            <div class="video-card" data-title="{{ video.title }}" data-letter="{{ video.title[0]|upper if video.title else '#' }}">
                 {% if video.thumbnail_url %}
                 <img src="{{ video.thumbnail_url }}" alt="{{ video.title }}" class="video-thumbnail">
                 {% endif %}
@@ -730,6 +812,56 @@
     </div>
 
     <script>
+        // Scroll to top function
+        function scrollToTop() {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        // Initialize alphabet navigation
+        document.addEventListener('DOMContentLoaded', () => {
+            const alphabetNav = document.getElementById('alphabetNav');
+            const cards = document.querySelectorAll('.video-card');
+            const letters = new Set();
+
+            // Collect all first letters
+            cards.forEach(card => {
+                const letter = card.dataset.letter;
+                if (letter && /[A-Z]/.test(letter)) {
+                    letters.add(letter);
+                }
+            });
+
+            // Generate alphabet buttons
+            const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
+            alphabet.forEach(letter => {
+                const btn = document.createElement('a');
+                btn.textContent = letter;
+                btn.className = 'letter-btn';
+
+                if (letters.has(letter)) {
+                    btn.href = '#letter-' + letter;
+                    btn.onclick = (e) => {
+                        e.preventDefault();
+                        jumpToLetter(letter);
+                    };
+                } else {
+                    btn.classList.add('inactive');
+                }
+
+                alphabetNav.appendChild(btn);
+            });
+        });
+
+        function jumpToLetter(letter) {
+            const cards = document.querySelectorAll('.video-card');
+            for (let card of cards) {
+                if (card.dataset.letter === letter) {
+                    card.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    break;
+                }
+            }
+        }
+
         // Toggle prompt editor collapse
         function togglePromptEditor() {
             const section = document.getElementById('promptEditorSection');
