@@ -267,6 +267,22 @@
             background: #a01830;
         }
 
+        .prompt-guidance-input {
+            background: #2a2a2a;
+            color: #fff;
+            border: 1px solid #555;
+            padding: 0.5rem;
+            border-radius: 3px;
+            font-size: 0.85rem;
+            width: 100%;
+            margin-bottom: 0.5rem;
+        }
+
+        .prompt-guidance-input:focus {
+            border-color: #c41e3a;
+            outline: none;
+        }
+
         .reextract-btn {
             background: #2a2a2a;
             color: #fff;
@@ -286,6 +302,52 @@
         .reextract-btn:disabled {
             opacity: 0.5;
             cursor: not-allowed;
+        }
+
+        .prompt-editor-section {
+            background: #1a1a1a;
+            padding: 2rem;
+            margin: 2rem 0;
+            border-radius: 8px;
+            border: 1px solid #c41e3a;
+        }
+
+        .prompt-editor-section h2 {
+            color: #c41e3a;
+            margin-bottom: 1rem;
+        }
+
+        .prompt-textarea {
+            width: 100%;
+            min-height: 400px;
+            background: #2a2a2a;
+            color: #fff;
+            border: 1px solid #555;
+            padding: 1rem;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
+            line-height: 1.6;
+        }
+
+        .prompt-textarea:focus {
+            border-color: #c41e3a;
+            outline: none;
+        }
+
+        .save-prompt-btn {
+            background: #c41e3a;
+            color: #fff;
+            border: none;
+            padding: 0.6rem 1.5rem;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 1rem;
+            margin-top: 1rem;
+        }
+
+        .save-prompt-btn:hover {
+            background: #a01830;
         }
 
         select {
@@ -360,6 +422,17 @@
             <span class="search-icon">🔍</span>
         </form>
     </div>
+
+    {% if is_admin %}
+    <div class="container">
+        <div class="prompt-editor-section">
+            <h2>⚙️ Master Prompt Editor</h2>
+            <p style="color: #999; margin-bottom: 1rem;">Edit the master prompt template used for all extractions. Changes save to config/prompt_template.txt</p>
+            <textarea id="masterPromptTextarea" class="prompt-textarea" placeholder="Loading prompt..."></textarea>
+            <button class="save-prompt-btn" onclick="saveMasterPrompt()">💾 Save Master Prompt</button>
+        </div>
+    </div>
+    {% endif %}
 
     <div class="controls">
         <a href="/?sort=alpha&category={{ category }}&search={{ search }}&type={{ video_type }}&composer={{ composer_filter }}&performer={{ performer_filter }}&style={{ style_filter }}&era={{ era_filter }}" class="btn {% if sort == 'alpha' %}active{% endif %}">
@@ -529,9 +602,15 @@
                     {% endif %}
 
                     {% if is_admin %}
-                    <button class="reextract-btn" onclick="reextractVideo({{ video.video_id }}, this)" style="margin-top: 0.5rem;">
-                        🔄 Re-extract
-                    </button>
+                    <div style="margin-top: 0.5rem;">
+                        <input type="text"
+                               class="prompt-guidance-input"
+                               id="guidance-{{ video.video_id }}"
+                               placeholder="Add guidance (e.g., 'focus on solos', 'extract all timestamps')...">
+                        <button class="reextract-btn" onclick="reextractVideo({{ video.video_id }}, this)">
+                            🔄 Re-extract
+                        </button>
+                    </div>
                     {% endif %}
 
                     <a href="{{ video.url }}" target="_blank" class="video-link">
@@ -738,7 +817,51 @@
             }
         }
 
+        // Load master prompt on page load
+        {% if is_admin %}
+        document.addEventListener('DOMContentLoaded', async () => {
+            try {
+                const response = await fetch('/api/get_master_prompt');
+                const result = await response.json();
+                if (result.success) {
+                    document.getElementById('masterPromptTextarea').value = result.prompt;
+                }
+            } catch (error) {
+                console.error('Failed to load master prompt:', error);
+            }
+        });
+
+        async function saveMasterPrompt() {
+            const promptText = document.getElementById('masterPromptTextarea').value;
+
+            try {
+                const response = await fetch('/api/save_master_prompt', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        prompt: promptText
+                    })
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    alert('✅ Master prompt saved successfully!');
+                } else {
+                    alert('❌ Error: ' + (result.error || 'Unknown error'));
+                }
+            } catch (error) {
+                alert('❌ Network error: ' + error.message);
+            }
+        }
+        {% endif %}
+
         async function reextractVideo(videoId, button) {
+            const guidanceInput = document.getElementById('guidance-' + videoId);
+            const guidance = guidanceInput ? guidanceInput.value.trim() : '';
+
             if (!confirm('Re-extract metadata for this video? This will replace all current data.')) {
                 return;
             }
@@ -750,11 +873,13 @@
             try {
                 const response = await fetch('/api/reextract_video', {
                     method: 'POST',
-                    headers: {
+                    headers:
+{
                         'Content-Type': 'application/json',
                     },
                     body: JSON.stringify({
-                        video_id: videoId
+                        video_id: videoId,
+                        guidance: guidance
                     })
                 });
 

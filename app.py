@@ -338,6 +338,44 @@ def update_song():
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)}), 500
 
+@app.route('/api/get_master_prompt', methods=['GET'])
+def get_master_prompt():
+    if not session.get('admin'):
+        return jsonify({'success': False, 'error': 'Unauthorized'}), 401
+
+    try:
+        with open('config/prompt_template.txt', 'r') as f:
+            prompt = f.read()
+        return jsonify({'success': True, 'prompt': prompt})
+    except FileNotFoundError:
+        # Return default prompt if file doesn't exist
+        default_prompt = open('utils/llm_full_extract.py', 'r').read()
+        # Extract prompt from the file
+        start = default_prompt.find('prompt = f"""') + 13
+        end = default_prompt.find('"""', start)
+        prompt_text = default_prompt[start:end]
+        return jsonify({'success': True, 'prompt': prompt_text})
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@app.route('/api/save_master_prompt', methods=['POST'])
+def save_master_prompt():
+    if not session.get('admin'):
+        return jsonify({'success': False, 'error': 'Unauthorized'}), 401
+
+    data = request.get_json()
+    prompt = data.get('prompt')
+
+    if not prompt:
+        return jsonify({'success': False, 'error': 'Missing prompt'}), 400
+
+    try:
+        with open('config/prompt_template.txt', 'w') as f:
+            f.write(prompt)
+        return jsonify({'success': True})
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
 @app.route('/api/reextract_video', methods=['POST'])
 def reextract_video():
     if not session.get('admin'):
@@ -345,6 +383,7 @@ def reextract_video():
 
     data = request.get_json()
     video_id = data.get('video_id')
+    guidance = data.get('guidance', '').strip()
 
     if not video_id:
         return jsonify({'success': False, 'error': 'Missing video_id'}), 400
@@ -361,6 +400,11 @@ def reextract_video():
             return jsonify({'success': False, 'error': 'Video not found'}), 404
 
         vid_id, title, description, url = video
+
+        # Add guidance section if provided
+        guidance_section = ""
+        if guidance:
+            guidance_section = f"\n\nADDITIONAL GUIDANCE FROM USER:\n{guidance}\n"
 
         # Run LLM extraction (same prompt as llm_full_extract.py)
         prompt = f"""You are analyzing a Piano Jazz Concept YouTube video to catalog which songs/pieces have been analyzed.
@@ -439,7 +483,9 @@ Example response:
 
 Or if no songs: []
 
-Be comprehensive BUT conservative! Only extract what's actually there."""
+Be comprehensive BUT conservative! Only extract what's actually there.
+
+{guidance_section}"""
 
         response = openai_client.chat.completions.create(
             model="gpt-4o-mini",
