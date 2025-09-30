@@ -81,6 +81,10 @@ def index():
     category = request.args.get('category', 'all')
     search = request.args.get('search', '').strip()
     video_type = request.args.get('type', 'all')  # all, compilation, single, non-analysis
+    composer_filter = request.args.get('composer', 'all')
+    performer_filter = request.args.get('performer', 'all')
+    style_filter = request.args.get('style', 'all')
+    era_filter = request.args.get('era', 'all')
 
     songs = get_songs()
 
@@ -155,6 +159,22 @@ def index():
         # Only show first part of each video to avoid duplicates
         processed = [s for s in processed if s['category'] in ['Interviews/Culture', 'Autres'] and s['part_number'] == 1]
 
+    # Filter by composer
+    if composer_filter != 'all':
+        processed = [s for s in processed if s['composer'] and composer_filter.lower() in s['composer'].lower()]
+
+    # Filter by performer
+    if performer_filter != 'all':
+        processed = [s for s in processed if s['performer'] and performer_filter.lower() in s['performer'].lower()]
+
+    # Filter by style
+    if style_filter != 'all':
+        processed = [s for s in processed if s['style'] and style_filter.lower() in s['style'].lower()]
+
+    # Filter by era
+    if era_filter != 'all':
+        processed = [s for s in processed if s['era'] and era_filter.lower() in s['era'].lower()]
+
     # Sort
     if sort == 'alpha':
         processed.sort(key=lambda x: x['title'].lower())
@@ -163,8 +183,24 @@ def index():
     elif sort == 'date':
         processed.sort(key=lambda x: x['published_at'], reverse=True)
 
-    # Get categories for filter
-    all_categories = sorted(set(s['category'] for s in processed))
+    # Get all unique values for filter dropdowns (from ALL songs, not just filtered)
+    all_songs = get_songs()
+    all_processed = []
+    for s in all_songs:
+        cat = categorize_video(s['video_title'], s['description'])
+        all_processed.append({
+            'composer': s['composer'] or '',
+            'performer': s['performer'] or '',
+            'style': s['style'] or '',
+            'era': s['era'] or '',
+            'category': cat
+        })
+
+    all_categories = sorted(set(s['category'] for s in all_processed))
+    all_composers = sorted(set(s['composer'] for s in all_processed if s['composer']))
+    all_performers = sorted(set(s['performer'] for s in all_processed if s['performer']))
+    all_styles = sorted(set(s['style'] for s in all_processed if s['style']))
+    all_eras = sorted(set(s['era'] for s in all_processed if s['era']))
 
     return render_template('index.html',
                          videos=processed,
@@ -173,6 +209,14 @@ def index():
                          categories=all_categories,
                          search=search,
                          video_type=video_type,
+                         composer_filter=composer_filter,
+                         performer_filter=performer_filter,
+                         style_filter=style_filter,
+                         era_filter=era_filter,
+                         composers=all_composers,
+                         performers=all_performers,
+                         styles=all_styles,
+                         eras=all_eras,
                          is_admin=session.get('admin', False))
 
 @app.route('/api/login', methods=['POST'])

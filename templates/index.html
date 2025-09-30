@@ -330,34 +330,67 @@
         <form class="search-container" method="get" action="/">
             <input type="hidden" name="sort" value="{{ sort }}">
             <input type="hidden" name="category" value="{{ category }}">
+            <input type="hidden" name="type" value="{{ video_type }}">
+            <input type="hidden" name="composer" value="{{ composer_filter }}">
+            <input type="hidden" name="performer" value="{{ performer_filter }}">
+            <input type="hidden" name="style" value="{{ style_filter }}">
+            <input type="hidden" name="era" value="{{ era_filter }}">
             <input type="text" name="search" class="search-input" placeholder="Rechercher par titre, compositeur, artiste..." value="{{ search }}">
             <span class="search-icon">🔍</span>
         </form>
     </div>
 
     <div class="controls">
-        <a href="/?sort=alpha&category={{ category }}&search={{ search }}&type={{ video_type }}" class="btn {% if sort == 'alpha' %}active{% endif %}">
+        <a href="/?sort=alpha&category={{ category }}&search={{ search }}&type={{ video_type }}&composer={{ composer_filter }}&performer={{ performer_filter }}&style={{ style_filter }}&era={{ era_filter }}" class="btn {% if sort == 'alpha' %}active{% endif %}">
             📝 Alphabétique
         </a>
-        <a href="/?sort=theme&category={{ category }}&search={{ search }}&type={{ video_type }}" class="btn {% if sort == 'theme' %}active{% endif %}">
+        <a href="/?sort=theme&category={{ category }}&search={{ search }}&type={{ video_type }}&composer={{ composer_filter }}&performer={{ performer_filter }}&style={{ style_filter }}&era={{ era_filter }}" class="btn {% if sort == 'theme' %}active{% endif %}">
             🎵 Thématique
         </a>
-        <a href="/?sort=date&category={{ category }}&search={{ search }}&type={{ video_type }}" class="btn {% if sort == 'date' %}active{% endif %}">
+        <a href="/?sort=date&category={{ category }}&search={{ search }}&type={{ video_type }}&composer={{ composer_filter }}&performer={{ performer_filter }}&style={{ style_filter }}&era={{ era_filter }}" class="btn {% if sort == 'date' %}active{% endif %}">
             📅 Date
         </a>
 
-        <select onchange="window.location.href='/?sort={{ sort }}&category='+this.value+'&search={{ search }}&type={{ video_type }}'">
+        <select onchange="window.location.href='/?sort={{ sort }}&category='+this.value+'&search={{ search }}&type={{ video_type }}&composer={{ composer_filter }}&performer={{ performer_filter }}&style={{ style_filter }}&era={{ era_filter }}'">
             <option value="all" {% if category == 'all' %}selected{% endif %}>Toutes catégories</option>
             {% for cat in categories %}
             <option value="{{ cat }}" {% if category == cat %}selected{% endif %}>{{ cat }}</option>
             {% endfor %}
         </select>
 
-        <select onchange="window.location.href='/?sort={{ sort }}&category={{ category }}&search={{ search }}&type='+this.value">
+        <select onchange="window.location.href='/?sort={{ sort }}&category={{ category }}&search={{ search }}&type='+this.value+'&composer={{ composer_filter }}&performer={{ performer_filter }}&style={{ style_filter }}&era={{ era_filter }}'">
             <option value="all" {% if video_type == 'all' %}selected{% endif %}>Tous types</option>
             <option value="compilation" {% if video_type == 'compilation' %}selected{% endif %}>📦 Compilations</option>
             <option value="single" {% if video_type == 'single' %}selected{% endif %}>🎵 Morceaux uniques</option>
             <option value="non-analysis" {% if video_type == 'non-analysis' %}selected{% endif %}>💬 Non-analyse</option>
+        </select>
+
+        <select onchange="window.location.href='/?sort={{ sort }}&category={{ category }}&search={{ search }}&type={{ video_type }}&composer='+this.value+'&performer={{ performer_filter }}&style={{ style_filter }}&era={{ era_filter }}'">
+            <option value="all" {% if composer_filter == 'all' %}selected{% endif %}>🎼 Tous compositeurs</option>
+            {% for composer in composers %}
+            <option value="{{ composer }}" {% if composer_filter == composer %}selected{% endif %}>{{ composer }}</option>
+            {% endfor %}
+        </select>
+
+        <select onchange="window.location.href='/?sort={{ sort }}&category={{ category }}&search={{ search }}&type={{ video_type }}&composer={{ composer_filter }}&performer='+this.value+'&style={{ style_filter }}&era={{ era_filter }}'">
+            <option value="all" {% if performer_filter == 'all' %}selected{% endif %}>🎹 Tous interprètes</option>
+            {% for performer in performers %}
+            <option value="{{ performer }}" {% if performer_filter == performer %}selected{% endif %}>{{ performer }}</option>
+            {% endfor %}
+        </select>
+
+        <select onchange="window.location.href='/?sort={{ sort }}&category={{ category }}&search={{ search }}&type={{ video_type }}&composer={{ composer_filter }}&performer={{ performer_filter }}&style='+this.value+'&era={{ era_filter }}'">
+            <option value="all" {% if style_filter == 'all' %}selected{% endif %}>🎶 Tous styles</option>
+            {% for style in styles %}
+            <option value="{{ style }}" {% if style_filter == style %}selected{% endif %}>{{ style }}</option>
+            {% endfor %}
+        </select>
+
+        <select onchange="window.location.href='/?sort={{ sort }}&category={{ category }}&search={{ search }}&type={{ video_type }}&composer={{ composer_filter }}&performer={{ performer_filter }}&style={{ style_filter }}&era='+this.value">
+            <option value="all" {% if era_filter == 'all' %}selected{% endif %}>📅 Toutes époques</option>
+            {% for era in eras %}
+            <option value="{{ era }}" {% if era_filter == era %}selected{% endif %}>{{ era }}</option>
+            {% endfor %}
         </select>
     </div>
 
