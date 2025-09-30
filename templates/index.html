@@ -478,6 +478,46 @@
             color: #fff;
         }
 
+        .add-song-btn {
+            position: absolute;
+            top: 0.75rem;
+            right: 3rem;
+            background: #f5f5f5;
+            color: #999;
+            border: none;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+            z-index: 10;
+        }
+
+        .add-song-btn:hover {
+            background: #4CAF50;
+            color: #fff;
+        }
+
+        .song-title-input {
+            background: #fff;
+            color: #333;
+            border: 2px solid #666;
+            padding: 0.5rem;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            width: 100%;
+            margin-top: 0.5rem;
+        }
+
+        .song-title-input:focus {
+            outline: none;
+            border-color: #4CAF50;
+        }
+
         .reextract-btn {
             position: relative;
             padding: 0.5rem 1rem;
@@ -895,8 +935,13 @@
         <div class="video-grid">
             {% for video in videos %}
             <div class="video-card" data-title="{{ video.title }}" data-letter="{{ video.title[0]|upper if video.title else '#' }}" data-song-id="{{ video.id }}">
-                {% if is_admin and video.id %}
-                <button class="delete-song-btn" onclick="deleteSong({{ video.id }}, this)" title="Delete this song">−</button>
+                {% if is_admin %}
+                    {% if video.id %}
+                    <button class="delete-song-btn" onclick="deleteSong({{ video.id }}, this)" title="Delete this song">−</button>
+                    {% endif %}
+                    {% if view == 'videos' %}
+                    <button class="add-song-btn" onclick="showSongInput({{ video.video_id }}, this)" title="Add new song">+</button>
+                    {% endif %}
                 {% endif %}
                 {% if video.thumbnail_url %}
                 <div class="thumbnail-container" data-video-id="{{ video.video_id }}" data-timestamp="{{ video.timestamp or '' }}">
@@ -909,7 +954,7 @@
                 {% endif %}
                 <div class="video-content">
                     <span class="category-badge">{{ video.category }}</span>
-                    {% if video.total_parts > 1 %}
+                    {% if video.total_parts and video.total_parts > 1 %}
                     <span class="part-badge">Partie {{ video.part_number }}/{{ video.total_parts }}</span>
                     {% endif %}
                     <h3 class="video-title">
@@ -1056,7 +1101,7 @@
                     <p class="composer" style="font-style: italic; color: #999;">📝 {{ video.context_notes }}</p>
                     {% endif %}
 
-                    {% if video.total_parts > 1 %}
+                    {% if video.total_parts and video.total_parts > 1 %}
                     <p class="video-origin">Extrait de: {{ video.video_title }}</p>
                     {% endif %}
 
@@ -1624,6 +1669,85 @@
                 alert('❌ Network error: ' + error.message);
                 button.disabled = false;
                 button.textContent = originalText;
+            }
+        }
+
+        function showSongInput(videoId, button) {
+            const card = button.closest('.video-card');
+            const videoContent = card.querySelector('.video-content');
+
+            // Check if input already exists
+            if (card.querySelector('.song-title-input-container')) {
+                return;
+            }
+
+            // Create input container
+            const inputContainer = document.createElement('div');
+            inputContainer.className = 'song-title-input-container';
+            inputContainer.style.marginTop = '1rem';
+            inputContainer.style.padding = '1rem';
+            inputContainer.style.background = '#f9f9f9';
+            inputContainer.style.borderRadius = '8px';
+
+            // Create input
+            const input = document.createElement('input');
+            input.type = 'text';
+            input.className = 'song-title-input';
+            input.placeholder = 'Enter song title...';
+            input.dataset.videoId = videoId;
+
+            // Handle Enter key
+            input.addEventListener('keydown', async (e) => {
+                if (e.key === 'Enter') {
+                    const songTitle = input.value.trim();
+                    if (songTitle) {
+                        await createSongCard(videoId, songTitle, inputContainer);
+                    }
+                } else if (e.key === 'Escape') {
+                    inputContainer.remove();
+                }
+            });
+
+            inputContainer.appendChild(input);
+            videoContent.appendChild(inputContainer);
+            input.focus();
+        }
+
+        async function createSongCard(videoId, songTitle, inputContainer) {
+            try {
+                const response = await fetch('/api/create_song', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        video_id: videoId,
+                        song_title: songTitle
+                    })
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    // Show success notification
+                    const notification = document.getElementById('saveNotification');
+                    if (notification) {
+                        notification.textContent = `✓ Song card created: ${songTitle}`;
+                        notification.classList.add('show');
+
+                        setTimeout(() => {
+                            notification.classList.remove('show');
+                            location.reload();
+                        }, 1500);
+                    }
+
+                    // Remove input
+                    inputContainer.remove();
+                } else {
+                    alert('❌ Error: ' + (result.error || 'Unknown error'));
+                }
+            } catch (error) {
+                alert('❌ Network error: ' + error.message);
             }
         }
     </script>

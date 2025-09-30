@@ -750,6 +750,57 @@ def restore_song():
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)}), 500
 
+@app.route('/api/create_song', methods=['POST'])
+def create_song():
+    if not session.get('admin'):
+        return jsonify({'success': False, 'error': 'Unauthorized'}), 401
+
+    data = request.get_json()
+    video_id = data.get('video_id')
+    song_title = data.get('song_title')
+
+    if not video_id or not song_title:
+        return jsonify({'success': False, 'error': 'Missing video_id or song_title'}), 400
+
+    try:
+        conn = sqlite3.connect('database/piano_jazz_videos.db', timeout=10.0)
+        cursor = conn.cursor()
+
+        # Get video information
+        cursor.execute('''
+            SELECT id, title, description, url, thumbnail_url, published_at
+            FROM videos
+            WHERE id = ?
+        ''', (video_id,))
+        video = cursor.fetchone()
+
+        if not video:
+            conn.close()
+            return jsonify({'success': False, 'error': 'Video not found'}), 404
+
+        # Insert new song with minimal data
+        cursor.execute('''
+            INSERT INTO songs (
+                video_id, song_title, video_title, video_url,
+                video_description, published_at, part_number, total_parts, deleted
+            ) VALUES (?, ?, ?, ?, ?, ?, 1, 1, 0)
+        ''', (
+            video[0],  # video_id
+            song_title,  # song_title
+            video[1],  # video_title
+            video[3],  # video_url
+            video[2],  # video_description
+            video[5]   # published_at
+        ))
+
+        new_song_id = cursor.lastrowid
+        conn.commit()
+        conn.close()
+
+        return jsonify({'success': True, 'song_id': new_song_id})
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
 if __name__ == '__main__':
     import os
     port = int(os.environ.get('PORT', 5000))
