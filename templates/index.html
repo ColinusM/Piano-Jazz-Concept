@@ -283,9 +283,27 @@
                     <span class="part-badge">Partie {{ video.part_number }}/{{ video.total_parts }}</span>
                     {% endif %}
                     <h3 class="video-title">{{ video.title }}</h3>
-                    {% if video.composer %}
-                    <p class="composer">🎵 {{ video.composer }}</p>
+
+                    {% if video.original_artist %}
+                    <p class="composer">🎤 Original: {{ video.original_artist }}</p>
                     {% endif %}
+
+                    {% if video.composer %}
+                    <p class="composer">🎵 Compositeur: {{ video.composer }}</p>
+                    {% endif %}
+
+                    {% if video.performer %}
+                    <p class="composer">🎹 Interprète: {{ video.performer }}</p>
+                    {% endif %}
+
+                    {% if video.composition_year %}
+                    <p class="composer">📅 Année: {{ video.composition_year }}</p>
+                    {% endif %}
+
+                    {% if video.style %}
+                    <p class="composer">🎼 Style: {{ video.style }}</p>
+                    {% endif %}
+
                     {% if video.total_parts > 1 %}
                     <p class="video-origin">Extrait de: {{ video.video_title }}</p>
                     {% endif %}

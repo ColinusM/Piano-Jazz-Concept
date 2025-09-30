@@ -1,5 +1,6 @@
 from flask import Flask, render_template, request
 import sqlite3
+import json
 
 app = Flask(__name__)
 
@@ -15,6 +16,14 @@ def get_songs():
             s.timestamp,
             s.part_number,
             s.total_parts,
+            s.performer,
+            s.original_artist,
+            s.songwriters,
+            s.composition_year,
+            s.style,
+            s.era,
+            s.other_musicians,
+            s.additional_info,
             v.title as video_title,
             v.url,
             v.description,
@@ -81,9 +90,28 @@ def index():
                 seconds = int(parts[0]) * 60 + int(parts[1])
                 url = f"{s['url']}&t={seconds}s"
 
+        # Parse JSON fields
+        songwriters = None
+        other_musicians = None
+        try:
+            if s['songwriters']:
+                songwriters = json.loads(s['songwriters'])
+            if s['other_musicians']:
+                other_musicians = json.loads(s['other_musicians'])
+        except:
+            pass
+
         processed.append({
             'title': s['song_title'],
             'composer': s['composer'] or '',
+            'performer': s['performer'] or '',
+            'original_artist': s['original_artist'] or '',
+            'songwriters': songwriters,
+            'composition_year': s['composition_year'],
+            'style': s['style'] or '',
+            'era': s['era'] or '',
+            'other_musicians': other_musicians,
+            'additional_info': s['additional_info'] or '',
             'url': url,
             'video_title': s['video_title'],
             'description': s['description'],
@@ -93,12 +121,16 @@ def index():
             'total_parts': s['total_parts']
         })
 
-    # Search filter
+    # Search filter - now searches across all enriched fields
     if search:
         search_lower = search.lower()
         processed = [s for s in processed if
                     search_lower in s['title'].lower() or
                     search_lower in (s['composer'] or '').lower() or
+                    search_lower in (s['performer'] or '').lower() or
+                    search_lower in (s['original_artist'] or '').lower() or
+                    search_lower in (s['style'] or '').lower() or
+                    search_lower in (s['era'] or '').lower() or
                     search_lower in s['video_title'].lower()]
 
     # Filter by category
