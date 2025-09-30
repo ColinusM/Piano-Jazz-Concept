@@ -31,7 +31,12 @@ def get_songs():
             video_title,
             video_url as url,
             video_description as description,
-            published_at
+            published_at,
+            album,
+            record_label,
+            recording_year,
+            featured_artists,
+            context_notes
         FROM songs
         ORDER BY song_title ASC
     ''')
@@ -104,11 +109,14 @@ def index():
         # Parse JSON fields
         songwriters = None
         other_musicians = None
+        featured_artists = None
         try:
             if s['songwriters']:
                 songwriters = json.loads(s['songwriters'])
             if s['other_musicians']:
                 other_musicians = json.loads(s['other_musicians'])
+            if s['featured_artists']:
+                featured_artists = json.loads(s['featured_artists'])
         except:
             pass
 
@@ -130,7 +138,12 @@ def index():
             'category': cat,
             'published_at': s['published_at'],
             'part_number': s['part_number'],
-            'total_parts': s['total_parts']
+            'total_parts': s['total_parts'],
+            'album': s['album'] or '',
+            'record_label': s['record_label'] or '',
+            'recording_year': s['recording_year'],
+            'featured_artists': featured_artists,
+            'context_notes': s['context_notes'] or ''
         })
 
     # Search filter - now searches across all enriched fields
@@ -143,6 +156,8 @@ def index():
                     search_lower in (s['original_artist'] or '').lower() or
                     search_lower in (s['style'] or '').lower() or
                     search_lower in (s['era'] or '').lower() or
+                    search_lower in (s['album'] or '').lower() or
+                    search_lower in (s['record_label'] or '').lower() or
                     search_lower in s['video_title'].lower()]
 
     # Filter by category
@@ -243,7 +258,8 @@ def update_song():
 
     # Validate field name to prevent SQL injection
     allowed_fields = ['song_title', 'composer', 'performer', 'original_artist',
-                     'composition_year', 'style', 'era', 'additional_info']
+                     'composition_year', 'style', 'era', 'additional_info',
+                     'album', 'record_label', 'recording_year', 'context_notes']
 
     if field not in allowed_fields:
         return jsonify({'success': False, 'error': 'Invalid field'}), 400

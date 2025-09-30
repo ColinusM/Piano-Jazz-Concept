@@ -12,50 +12,94 @@ client = OpenAI(
 
 def extract_video_data(video_title, video_description, video_url):
     """
-    Give LLM the raw video data and let it extract EVERYTHING.
+    Super-prompt: Extract EVERYTHING using title + description + LLM training data.
     """
 
-    prompt = f"""Analyze this Piano Jazz Concept YouTube video and extract ALL songs and metadata.
+    prompt = f"""You are analyzing a Piano Jazz Concept YouTube video to catalog which songs/pieces have been analyzed.
 
 VIDEO TITLE: {video_title}
 VIDEO URL: {video_url}
 FULL DESCRIPTION:
 {video_description}
 
-Extract EVERYTHING from this video:
-- All songs mentioned (with timestamps if present)
-- Composer for each song
-- Performer/pianist
-- Original artists (if covers)
-- Years, styles, eras
-- Any other musical metadata
+CRITICAL CONTEXT:
+- Piano Jazz Concept is Étienne Guéreau's educational jazz channel
+- NEVER list Étienne as "performer" - he's the analyst/demonstrator, NOT the artist to catalog
+- Focus on WHICH ARTISTS' RECORDINGS are being analyzed/discussed
+- If title says "avec Brad Mehldau" → Brad is the featured performer
+- If analyzing "Coltrane's Giant Steps" → Coltrane is the performer
+- If just "Giant Steps" with no artist → use your knowledge (original = John Coltrane)
+- If comparing multiple artists' versions → create SEPARATE entries for each
 
-Return JSON array of songs. If single song, return array with 1 item:
+YOUR TASK:
+Extract ALL songs/pieces analyzed in this video with MAXIMUM metadata.
+
+Use THREE sources:
+1. Video title/description to identify songs and artists
+2. Your training data to fill gaps and add context
+3. Your knowledge of jazz history, famous recordings, albums, etc.
+
+EXTRACT EVERYTHING:
+- Song title
+- Composer(s)
+- Performer/Artist (whose recording/version is being analyzed - NEVER Étienne)
+  - From title: "avec Brad Mehldau" → Brad Mehldau
+  - From description: "analyse du solo de Coltrane" → John Coltrane
+  - From your knowledge: "Giant Steps" → John Coltrane (if not specified)
+  - If no specific recording mentioned → leave null
+- Original artist (if it's a cover/arrangement)
+- Album name (if mentioned OR if you know which famous album)
+- Record label (if you know it)
+- Recording year (if mentioned OR if you know the famous recording year)
+- Composition year
+- Style/genre
+- Era/decade
+- Featured artists (all artists mentioned in title/description)
+- Context notes (analyzing specific recording? comparing versions? theory video?)
+- Timestamp (if provided)
+
+MULTIPLE VERSIONS:
+If video compares/analyzes multiple artists' versions, create SEPARATE entries:
+Example: "Giant Steps: Coltrane vs Tommy Flanagan" → 2 entries
+
+NO LIMITATIONS:
+Add as much information as you can from your training data. If you know the song:
+- Famous recordings and their details
+- Historical context
+- Notable musicians
+- Anything valuable for cataloging
+
+Return JSON array. Even if single song, return array:
 [
   {{
     "song_title": "song name",
     "composer": "who wrote it",
-    "performer": "who plays in this video",
+    "performer": "whose recording is analyzed (NEVER Étienne)",
     "original_artist": "if it's a cover",
-    "timestamp": "MM:SS or null",
+    "album": "album name if known",
+    "record_label": "label if known",
+    "recording_year": year or null,
     "composition_year": year or null,
-    "style": "genre",
+    "style": "genre/style",
     "era": "decade/era",
-    "additional_info": "any other info"
+    "featured_artists": ["artist1", "artist2"],
+    "timestamp": "MM:SS or null",
+    "context_notes": "context about this analysis",
+    "additional_info": "anything else valuable"
   }}
 ]
 
-Use both the text AND your training knowledge. Be comprehensive!"""
+Be comprehensive! Use video content AND your training knowledge."""
 
     try:
         response = client.chat.completions.create(
             model="gpt-4o-mini",
             messages=[
-                {"role": "system", "content": "You are a music metadata extraction expert. Return only valid JSON arrays."},
+                {"role": "system", "content": "You are a music metadata extraction expert specializing in jazz. Return only valid JSON arrays. Use your full training knowledge to add comprehensive metadata."},
                 {"role": "user", "content": prompt}
             ],
             temperature=0,
-            max_tokens=1000
+            max_tokens=2000  # Increased for more detailed responses
         )
 
         response_content = response.choices[0].message.content
@@ -81,8 +125,8 @@ def main():
     cursor.execute('DELETE FROM songs')
     conn.commit()
 
-    # Get single test video (Jacob Collier)
-    cursor.execute('SELECT id, title, description, url FROM videos WHERE id = 392')
+    # Get all videos
+    cursor.execute('SELECT id, title, description, url FROM videos ORDER BY id')
     videos = cursor.fetchall()
     total = len(videos)
 
@@ -98,20 +142,28 @@ def main():
         songs = extract_video_data(title, description or "", url)
 
         if songs:
-            # Insert all extracted songs
+            # Insert all extracted songs with full metadata
             for song_idx, song in enumerate(songs, 1):
+                # Convert featured_artists list to JSON string
+                featured_artists = song.get('featured_artists')
+                if isinstance(featured_artists, list):
+                    featured_artists = json.dumps(featured_artists)
+
                 cursor.execute('''
                     INSERT INTO songs (
                         video_id, song_title, composer, performer,
                         original_artist, timestamp, composition_year,
                         style, era, additional_info,
-                        part_number, total_parts
-                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                        part_number, total_parts,
+                        album, record_label, recording_year,
+                        featured_artists, context_notes,
+                        video_title, video_url, video_description, published_at
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 ''', (
                     video_id,
                     song.get('song_title', title),
                     song.get('composer'),
-                    song.get('performer'),
+                    song.get('performer'),  # Will be null if not specified or if it's Étienne
                     song.get('original_artist'),
                     song.get('timestamp'),
                     song.get('composition_year'),
@@ -119,7 +171,16 @@ def main():
                     song.get('era'),
                     song.get('additional_info'),
                     song_idx,
-                    len(songs)
+                    len(songs),
+                    song.get('album'),
+                    song.get('record_label'),
+                    song.get('recording_year'),
+                    featured_artists,
+                    song.get('context_notes'),
+                    title,
+                    url,
+                    description,
+                    None  # published_at - will need to get from videos table
                 ))
 
             total_songs += len(songs)

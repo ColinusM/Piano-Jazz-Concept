@@ -483,6 +483,26 @@
                     </p>
                     {% endif %}
 
+                    {% if video.album %}
+                    <p class="composer">💿 Album: {{ video.album }}</p>
+                    {% endif %}
+
+                    {% if video.recording_year %}
+                    <p class="composer">🎙️ Recording: {{ video.recording_year }}</p>
+                    {% endif %}
+
+                    {% if video.record_label %}
+                    <p class="composer">🏷️ Label: {{ video.record_label }}</p>
+                    {% endif %}
+
+                    {% if video.featured_artists %}
+                    <p class="composer">⭐ Featured: {{ video.featured_artists|join(', ') }}</p>
+                    {% endif %}
+
+                    {% if video.context_notes %}
+                    <p class="composer" style="font-style: italic; color: #999;">📝 {{ video.context_notes }}</p>
+                    {% endif %}
+
                     {% if video.total_parts > 1 %}
                     <p class="video-origin">Extrait de: {{ video.video_title }}</p>
                     {% endif %}
