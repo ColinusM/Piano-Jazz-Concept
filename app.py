@@ -587,65 +587,24 @@ def get_transcript():
         video_id = match.group(1)
         print(f"Video ID: {video_id}")
 
-        # Try to fetch transcript with multiple language options
+        # Try to fetch transcript using YouTubeTranscriptApi instance
         transcript_list = None
         error_messages = []
 
-        # Try to get transcript - prefer French but accept any language
-        transcript_api = None
         try:
-            transcript_api = YouTubeTranscriptApi.list_transcripts(video_id)
+            api = YouTubeTranscriptApi()
+            available_transcripts = api.list(video_id)
+
+            # Try to get French first, then English
+            for transcript_info in available_transcripts:
+                if transcript_info.language_code in ['fr', 'en']:
+                    transcript_list = api.fetch(video_id, [transcript_info.language_code])
+                    print(f"✓ Found {transcript_info.language_code} transcript for {video_id}")
+                    break
+
         except Exception as e:
-            error_messages.append(f"Could not list transcripts: {str(e)}")
-            print(f"✗ Could not list transcripts for {video_id}: {e}")
-            transcript_list = None
-
-        if transcript_api:
-            # Try different transcript options in order of preference
-            found = False
-
-            # 1. French manual transcript
-            if not found:
-                try:
-                    transcript = transcript_api.find_manually_created_transcript(['fr'])
-                    transcript_list = transcript.fetch()
-                    print(f"✓ Found French manual transcript for {video_id}")
-                    found = True
-                except Exception as e:
-                    error_messages.append(f"French manual: {str(e)}")
-
-            # 2. French auto-generated
-            if not found:
-                try:
-                    transcript = transcript_api.find_generated_transcript(['fr'])
-                    transcript_list = transcript.fetch()
-                    print(f"✓ Found French auto-generated transcript for {video_id}")
-                    found = True
-                except Exception as e:
-                    error_messages.append(f"French auto: {str(e)}")
-
-            # 3. English manual, translate to French
-            if not found:
-                try:
-                    transcript = transcript_api.find_manually_created_transcript(['en', 'en-US'])
-                    translated = transcript.translate('fr')
-                    transcript_list = translated.fetch()
-                    print(f"✓ Found English manual transcript, translated to French for {video_id}")
-                    found = True
-                except Exception as e:
-                    error_messages.append(f"English manual: {str(e)}")
-
-            # 4. English auto-generated, translate to French
-            if not found:
-                try:
-                    transcript = transcript_api.find_generated_transcript(['en', 'en-US'])
-                    translated = transcript.translate('fr')
-                    transcript_list = translated.fetch()
-                    print(f"✓ Found English auto-generated transcript, translated to French for {video_id}")
-                    found = True
-                except Exception as e:
-                    error_messages.append(f"English auto: {str(e)}")
-                    transcript_list = None
+            error_messages.append(f"Error: {str(e)}")
+            print(f"✗ Transcript fetch failed for {video_id}: {e}")
 
         if not transcript_list:
             error_msg = f'No transcript available for video {video_id}. This video may not have captions/subtitles enabled.\n\nDetails:\n' + '\n'.join(error_messages)
@@ -656,7 +615,7 @@ def get_transcript():
             }), 404
 
         # Format transcript as text
-        transcript_text = '\n'.join([f"[{entry['start']:.1f}s] {entry['text']}" for entry in transcript_list])
+        transcript_text = '\n'.join([f"[{entry.start:.1f}s] {entry.text}" for entry in transcript_list])
 
         return jsonify({'success': True, 'transcript': transcript_text})
 
