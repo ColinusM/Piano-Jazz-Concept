@@ -20,32 +20,34 @@ def get_songs():
     cursor = conn.cursor()
     cursor.execute('''
         SELECT
-            id,
-            video_id,
-            song_title,
-            composer,
-            timestamp,
-            part_number,
-            total_parts,
-            performer,
-            original_artist,
-            songwriters,
-            composition_year,
-            style,
-            era,
-            other_musicians,
-            additional_info,
-            video_title,
-            video_url as url,
-            video_description as description,
-            published_at,
-            album,
-            record_label,
-            recording_year,
-            featured_artists,
-            context_notes
-        FROM songs
-        ORDER BY song_title ASC
+            s.id,
+            s.video_id,
+            s.song_title,
+            s.composer,
+            s.timestamp,
+            s.part_number,
+            s.total_parts,
+            s.performer,
+            s.original_artist,
+            s.songwriters,
+            s.composition_year,
+            s.style,
+            s.era,
+            s.other_musicians,
+            s.additional_info,
+            s.video_title,
+            s.video_url as url,
+            s.video_description as description,
+            s.published_at,
+            s.album,
+            s.record_label,
+            s.recording_year,
+            s.featured_artists,
+            s.context_notes,
+            v.thumbnail_url
+        FROM songs s
+        LEFT JOIN videos v ON s.video_id = v.id
+        ORDER BY s.song_title ASC
     ''')
     songs = cursor.fetchall()
     conn.close()
@@ -104,7 +106,7 @@ def index():
         conn = sqlite3.connect('database/piano_jazz_videos.db')
         conn.row_factory = sqlite3.Row
         cursor = conn.cursor()
-        cursor.execute('SELECT id, title, description, url, published_at FROM videos ORDER BY title ASC')
+        cursor.execute('SELECT id, title, description, url, published_at, thumbnail_url FROM videos ORDER BY title ASC')
         videos = cursor.fetchall()
         conn.close()
 
@@ -118,6 +120,7 @@ def index():
                 'video_title': v['title'],
                 'description': v['description'],
                 'published_at': v['published_at'],
+                'thumbnail_url': v['thumbnail_url'],
                 'category': 'No songs extracted yet',
                 'part_number': 1,
                 'total_parts': 1,
@@ -203,7 +206,8 @@ def index():
             'record_label': s['record_label'] or '',
             'recording_year': s['recording_year'],
             'featured_artists': featured_artists,
-            'context_notes': s['context_notes'] or ''
+            'context_notes': s['context_notes'] or '',
+            'thumbnail_url': s['thumbnail_url']
         })
 
     # Search filter - now searches across all enriched fields

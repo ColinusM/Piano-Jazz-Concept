@@ -98,6 +98,13 @@
             border-color: #c41e3a;
         }
 
+        .video-thumbnail {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+            display: block;
+        }
+
         .video-content {
             padding: 1.5rem;
         }
@@ -496,6 +503,9 @@
         <div class="video-grid">
             {% for video in videos %}
             <div class="video-card">
+                {% if video.thumbnail_url %}
+                <img src="{{ video.thumbnail_url }}" alt="{{ video.title }}" class="video-thumbnail">
+                {% endif %}
                 <div class="video-content">
                     <span class="category-badge">{{ video.category }}</span>
                     {% if video.total_parts > 1 %}

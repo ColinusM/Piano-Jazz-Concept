@@ -17,7 +17,8 @@ cursor.execute('''
         title TEXT,
         description TEXT,
         url TEXT,
-        published_at TEXT
+        published_at TEXT,
+        thumbnail_url TEXT
     )
 ''')
 
@@ -68,10 +69,17 @@ while True:
             url = f"https://youtube.com/watch?v={video_id}"
             published_at = item['snippet']['publishedAt']
 
+            # Get highest quality thumbnail available
+            thumbnails = item['snippet']['thumbnails']
+            thumbnail_url = (thumbnails.get('maxres') or
+                           thumbnails.get('high') or
+                           thumbnails.get('medium') or
+                           thumbnails.get('default'))['url']
+
             cursor.execute('''
-                INSERT OR REPLACE INTO videos (video_id, title, description, url, published_at)
-                VALUES (?, ?, ?, ?, ?)
-            ''', (video_id, title, description, url, published_at))
+                INSERT OR REPLACE INTO videos (video_id, title, description, url, published_at, thumbnail_url)
+                VALUES (?, ?, ?, ?, ?, ?)
+            ''', (video_id, title, description, url, published_at, thumbnail_url))
 
             video_count += 1
             print(f"Added: {title}")
