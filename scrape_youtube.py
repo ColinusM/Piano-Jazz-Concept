@@ -50,20 +50,31 @@ while True:
 
     response = requests.get('https://www.googleapis.com/youtube/v3/search', params=params).json()
 
-    for item in response['items']:
-        video_id = item['id']['videoId']
-        title = html.unescape(item['snippet']['title'])
-        description = html.unescape(item['snippet']['description'])
-        url = f"https://youtube.com/watch?v={video_id}"
-        published_at = item['snippet']['publishedAt']
+    # Collect video IDs
+    video_ids = [item['id']['videoId'] for item in response['items']]
 
-        cursor.execute('''
-            INSERT OR REPLACE INTO videos (video_id, title, description, url, published_at)
-            VALUES (?, ?, ?, ?, ?)
-        ''', (video_id, title, description, url, published_at))
+    # Fetch full details including complete descriptions
+    if video_ids:
+        details_response = requests.get('https://www.googleapis.com/youtube/v3/videos', params={
+            'key': API_KEY,
+            'id': ','.join(video_ids),
+            'part': 'snippet'
+        }).json()
 
-        video_count += 1
-        print(f"Added: {title}")
+        for item in details_response.get('items', []):
+            video_id = item['id']
+            title = html.unescape(item['snippet']['title'])
+            description = html.unescape(item['snippet']['description'])
+            url = f"https://youtube.com/watch?v={video_id}"
+            published_at = item['snippet']['publishedAt']
+
+            cursor.execute('''
+                INSERT OR REPLACE INTO videos (video_id, title, description, url, published_at)
+                VALUES (?, ?, ?, ?, ?)
+            ''', (video_id, title, description, url, published_at))
+
+            video_count += 1
+            print(f"Added: {title}")
 
     conn.commit()
 
