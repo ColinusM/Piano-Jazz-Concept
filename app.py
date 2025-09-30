@@ -235,13 +235,8 @@ def index():
         processed = [s for s in processed if s['category'] == category]
 
     # Filter by video type
-    if video_type == 'compilation':
-        processed = [s for s in processed if s['total_parts'] > 1]
-    elif video_type == 'single':
-        processed = [s for s in processed if s['total_parts'] == 1 and s['category'] not in ['Interviews/Culture', 'Autres']]
-    elif video_type == 'non-analysis':
-        # Only show first part of each video to avoid duplicates
-        processed = [s for s in processed if s['category'] in ['Interviews/Culture', 'Autres'] and s['part_number'] == 1]
+    if video_type != 'all':
+        processed = [s for s in processed if s.get('video_type') == video_type]
 
     # Filter by composer
     if composer_filter != 'all':

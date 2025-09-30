@@ -501,6 +501,9 @@
         <a href="/?view=videos&sort={{ sort }}" class="btn" style="background: #c41e3a; border-color: #c41e3a;">
             🎬 Show All Videos
         </a>
+        <a href="/?view=songs&sort={{ sort }}" class="btn" style="background: #2c5aa0; border-color: #2c5aa0;">
+            🎵 Show All Songs
+        </a>
         <a href="/?sort=alpha&category={{ category }}&search={{ search }}&type={{ video_type }}&composer={{ composer_filter }}&performer={{ performer_filter }}&style={{ style_filter }}&era={{ era_filter }}" class="btn {% if sort == 'alpha' %}active{% endif %}">
             📝 Alphabétique
         </a>
@@ -520,9 +523,9 @@
 
         <select onchange="window.location.href='/?sort={{ sort }}&category={{ category }}&search={{ search }}&type='+this.value+'&composer={{ composer_filter }}&performer={{ performer_filter }}&style={{ style_filter }}&era={{ era_filter }}'">
             <option value="all" {% if video_type == 'all' %}selected{% endif %}>Tous types</option>
-            <option value="compilation" {% if video_type == 'compilation' %}selected{% endif %}>📦 Compilations</option>
-            <option value="single" {% if video_type == 'single' %}selected{% endif %}>🎵 Morceaux uniques</option>
-            <option value="non-analysis" {% if video_type == 'non-analysis' %}selected{% endif %}>💬 Non-analyse</option>
+            <option value="uncategorized" {% if video_type == 'uncategorized' %}selected{% endif %}>🔘 Uncategorized</option>
+            <option value="analysis" {% if video_type == 'analysis' %}selected{% endif %}>🎹 Song Analysis</option>
+            <option value="non-analysis" {% if video_type == 'non-analysis' %}selected{% endif %}>💬 Talk/Interview</option>
         </select>
 
         <select onchange="window.location.href='/?sort={{ sort }}&category={{ category }}&search={{ search }}&type={{ video_type }}&composer='+this.value+'&performer={{ performer_filter }}&style={{ style_filter }}&era={{ era_filter }}'">
