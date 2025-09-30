@@ -31,6 +31,14 @@ python app.py
 
 The app runs on http://127.0.0.1:5000 by default.
 
+**CRITICAL: After ANY code edit (app.py, templates/, etc.), you MUST restart the Flask server for changes to take effect. The user needs to see changes immediately.**
+
+To restart:
+```bash
+# Kill existing Flask process and restart
+lsof -ti:5000 | xargs kill -9 2>/dev/null && python -u app.py 2>&1 | tee -a /tmp/flask.log
+```
+
 ## Data Pipeline
 
 The application follows a multi-step data pipeline that must be run in order:
@@ -102,6 +110,40 @@ Timestamps from video descriptions are automatically converted to YouTube URL pa
 
 All utility scripts in `utils/` use relative path `../database/piano_jazz_videos.db` and must be executed from within the `utils/` directory. The main Flask app (`app.py`) uses relative path `database/piano_jazz_videos.db` and must be executed from the project root.
 
+## Admin Features
+
+The application includes admin mode with enhanced features (requires login via `config/admin_config.py`):
+
+### Master Prompt Editor
+- Collapsible editor for modifying the LLM extraction prompt template
+- Saved to `config/prompt_template.txt`
+- Affects all future song extractions via `llm_full_extract.py` and re-extraction
+- Located above the search bar, can be minimized
+
+### Per-Song Management
+Each song card in admin mode includes:
+- **Inline editing**: Click ✏️ icon to edit any field (composer, performer, style, etc.)
+- **Undo functionality**: Cmd+Z or click undo notification to revert last change
+- **Prompt guidance field**: Add extraction hints before re-extracting (e.g., "focus on solos")
+- **Re-extract button**: Re-run LLM extraction for specific video with optional guidance
+- **Get Transcript button**: Fetch YouTube transcript (French/English with fallback) for analysis
+
+### Filtering and Display
+- **Show All Videos button**: Resets all filters to display complete song catalog
+- Multiple filter dropdowns: category, type, composer, performer, style, era
+- Search bar for text-based filtering
+- Sort options: alphabetical, thematic, or by date
+
 ## YouTube API Configuration
 
 The API key is hardcoded in `utils/scrape_youtube.py:6`. The channel handle is set to 'Pianojazzconcept'. When updating API credentials, also check the `config/` directory for OAuth client secrets.
+
+## YouTube Transcript API
+
+The app can fetch transcripts using `youtube-transcript-api` library (v1.2.2+). Transcript fetching follows this cascading fallback:
+1. French manual transcript
+2. French auto-generated transcript
+3. English manual transcript (translated to French)
+4. English auto-generated transcript (translated to French)
+
+Transcripts are fetched on-demand (not stored in database) to avoid YouTube API rate limits.
