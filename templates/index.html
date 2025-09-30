@@ -110,6 +110,30 @@
             font-size: 0.8rem;
             border-radius: 12px;
             margin-bottom: 0.8rem;
+            margin-right: 0.5rem;
+        }
+
+        .part-badge {
+            display: inline-block;
+            padding: 0.3rem 0.8rem;
+            background: #555;
+            color: #fff;
+            font-size: 0.8rem;
+            border-radius: 12px;
+            margin-bottom: 0.8rem;
+        }
+
+        .composer {
+            color: #4a9eff;
+            font-size: 0.9rem;
+            margin-top: 0.3rem;
+        }
+
+        .video-origin {
+            color: #777;
+            font-size: 0.85rem;
+            font-style: italic;
+            margin-top: 0.5rem;
         }
 
         .video-title {
@@ -223,7 +247,7 @@
 
     <div class="container">
         <div class="stats">
-            <p>{{ videos|length }} vidéo(s) trouvée(s)</p>
+            <p>{{ videos|length }} morceau(x) trouvé(s)</p>
         </div>
 
         <div class="video-grid">
@@ -231,13 +255,19 @@
             <div class="video-card">
                 <div class="video-content">
                     <span class="category-badge">{{ video.category }}</span>
+                    {% if video.total_parts > 1 %}
+                    <span class="part-badge">Partie {{ video.part_number }}/{{ video.total_parts }}</span>
+                    {% endif %}
                     <h3 class="video-title">{{ video.title }}</h3>
+                    {% if video.composer %}
+                    <p class="composer">🎵 {{ video.composer }}</p>
+                    {% endif %}
+                    {% if video.total_parts > 1 %}
+                    <p class="video-origin">Extrait de: {{ video.video_title }}</p>
+                    {% endif %}
                     <a href="{{ video.url }}" target="_blank" class="video-link">
                         ▶ Voir sur YouTube
                     </a>
-                    {% if video.description %}
-                    <p class="video-description">{{ video.description }}</p>
-                    {% endif %}
                 </div>
             </div>
             {% endfor %}

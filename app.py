@@ -3,14 +3,29 @@ import sqlite3
 
 app = Flask(__name__)
 
-def get_videos():
+def get_songs():
     conn = sqlite3.connect('piano_jazz_videos.db')
     conn.row_factory = sqlite3.Row
     cursor = conn.cursor()
-    cursor.execute('SELECT * FROM videos ORDER BY title ASC')
-    videos = cursor.fetchall()
+    cursor.execute('''
+        SELECT
+            s.id,
+            s.song_title,
+            s.composer,
+            s.timestamp,
+            s.part_number,
+            s.total_parts,
+            v.title as video_title,
+            v.url,
+            v.description,
+            v.published_at
+        FROM songs s
+        JOIN videos v ON s.video_id = v.id
+        ORDER BY s.song_title ASC
+    ''')
+    songs = cursor.fetchall()
     conn.close()
-    return videos
+    return songs
 
 def categorize_video(title, description):
     """Categorize videos by type"""
@@ -49,44 +64,59 @@ def index():
     category = request.args.get('category', 'all')
     search = request.args.get('search', '').strip()
 
-    videos = get_videos()
+    songs = get_songs()
 
-    # Categorize all videos
-    categorized = []
-    for v in videos:
-        cat = categorize_video(v['title'], v['description'])
-        categorized.append({
-            'title': v['title'],
-            'url': v['url'],
-            'description': v['description'],
+    # Process songs
+    processed = []
+    for s in songs:
+        cat = categorize_video(s['video_title'], s['description'])
+
+        # Build URL with timestamp if available
+        url = s['url']
+        if s['timestamp']:
+            # Convert timestamp to seconds for YouTube URL
+            parts = s['timestamp'].split(':')
+            if len(parts) == 2:
+                seconds = int(parts[0]) * 60 + int(parts[1])
+                url = f"{s['url']}&t={seconds}s"
+
+        processed.append({
+            'title': s['song_title'],
+            'composer': s['composer'] or '',
+            'url': url,
+            'video_title': s['video_title'],
+            'description': s['description'],
             'category': cat,
-            'published_at': v['published_at']
+            'published_at': s['published_at'],
+            'part_number': s['part_number'],
+            'total_parts': s['total_parts']
         })
 
     # Search filter
     if search:
         search_lower = search.lower()
-        categorized = [v for v in categorized if
-                      search_lower in v['title'].lower() or
-                      search_lower in v['description'].lower()]
+        processed = [s for s in processed if
+                    search_lower in s['title'].lower() or
+                    search_lower in (s['composer'] or '').lower() or
+                    search_lower in s['video_title'].lower()]
 
     # Filter by category
     if category != 'all':
-        categorized = [v for v in categorized if v['category'] == category]
+        processed = [s for s in processed if s['category'] == category]
 
     # Sort
     if sort == 'alpha':
-        categorized.sort(key=lambda x: x['title'].lower())
+        processed.sort(key=lambda x: x['title'].lower())
     elif sort == 'theme':
-        categorized.sort(key=lambda x: (x['category'], x['title'].lower()))
+        processed.sort(key=lambda x: (x['category'], x['title'].lower()))
     elif sort == 'date':
-        categorized.sort(key=lambda x: x['published_at'], reverse=True)
+        processed.sort(key=lambda x: x['published_at'], reverse=True)
 
     # Get categories for filter
-    all_categories = sorted(set(categorize_video(v['title'], v['description']) for v in videos))
+    all_categories = sorted(set(s['category'] for s in processed))
 
     return render_template('index.html',
-                         videos=categorized,
+                         videos=processed,
                          sort=sort,
                          category=category,
                          categories=all_categories,
