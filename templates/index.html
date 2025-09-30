@@ -672,6 +672,14 @@
 
                     {% if is_admin %}
                     <div style="margin-top: 0.5rem;">
+                        <div style="margin-bottom: 0.5rem;">
+                            <label style="font-size: 0.85rem; color: #888; margin-right: 0.5rem;">Video Type:</label>
+                            <select id="video-type-{{ video.video_id }}" onchange="updateVideoType({{ video.video_id }}, this.value)" style="background: #1a1a1a; color: #e0e0e0; border: 1px solid #333; border-radius: 4px; padding: 0.3rem; font-size: 0.85rem;">
+                                <option value="uncategorized" {% if video.video_type == 'uncategorized' %}selected{% endif %}>🔘 Uncategorized</option>
+                                <option value="analysis" {% if video.video_type == 'analysis' %}selected{% endif %}>🎹 Song Analysis</option>
+                                <option value="non-analysis" {% if video.video_type == 'non-analysis' %}selected{% endif %}>💬 Talk/Interview</option>
+                            </select>
+                        </div>
                         <input type="text"
                                class="prompt-guidance-input"
                                id="guidance-{{ video.video_id }}"
@@ -936,6 +944,29 @@
             }
         }
         {% endif %}
+
+        async function updateVideoType(videoId, videoType) {
+            try {
+                const response = await fetch('/api/update_video_type', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        video_id: videoId,
+                        video_type: videoType
+                    })
+                });
+
+                const result = await response.json();
+                if (!result.success) {
+                    alert('Failed to update video type: ' + (result.error || 'Unknown error'));
+                }
+            } catch (error) {
+                console.error('Error updating video type:', error);
+                alert('Failed to update video type');
+            }
+        }
 
         async function getTranscript(videoUrl, videoId) {
             const transcriptDiv = document.getElementById('transcript-' + videoId);

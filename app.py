@@ -46,7 +46,8 @@ def get_songs():
             s.recording_year,
             s.featured_artists,
             s.context_notes,
-            v.thumbnail_url
+            v.thumbnail_url,
+            v.video_type
         FROM songs s
         LEFT JOIN videos v ON s.video_id = v.id
         ORDER BY s.song_title ASC
@@ -209,7 +210,8 @@ def index():
             'recording_year': s['recording_year'],
             'featured_artists': featured_artists,
             'context_notes': s['context_notes'] or '',
-            'thumbnail_url': s['thumbnail_url']
+            'thumbnail_url': s['thumbnail_url'],
+            'video_type': s['video_type'] or 'uncategorized'
         })
 
     # Search filter - now searches across all enriched fields
@@ -621,6 +623,28 @@ def get_transcript():
 
     except Exception as e:
         return jsonify({'success': False, 'error': f'Could not fetch transcript: {str(e)}'}), 500
+
+@app.route('/api/update_video_type', methods=['POST'])
+def update_video_type():
+    if not session.get('admin'):
+        return jsonify({'success': False, 'error': 'Unauthorized'}), 401
+
+    data = request.get_json()
+    video_id = data.get('video_id')
+    video_type = data.get('video_type')
+
+    if not video_id or not video_type:
+        return jsonify({'success': False, 'error': 'Missing parameters'}), 400
+
+    try:
+        conn = sqlite3.connect('database/piano_jazz_videos.db')
+        cursor = conn.cursor()
+        cursor.execute('UPDATE videos SET video_type = ? WHERE id = ?', (video_type, video_id))
+        conn.commit()
+        conn.close()
+        return jsonify({'success': True})
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
 
 if __name__ == '__main__':
     import os
