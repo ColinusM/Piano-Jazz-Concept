@@ -101,15 +101,16 @@ def index():
     performer_filter = request.args.get('performer', 'all')
     style_filter = request.args.get('style', 'all')
     era_filter = request.args.get('era', 'all')
+    view = request.args.get('view', 'songs')
 
     songs = get_songs()
 
-    # If no songs, show videos instead for re-extraction
-    if not songs and session.get('admin'):
+    # If view=videos or no songs, show videos instead for re-extraction
+    if (view == 'videos' or not songs) and session.get('admin'):
         conn = sqlite3.connect('database/piano_jazz_videos.db')
         conn.row_factory = sqlite3.Row
         cursor = conn.cursor()
-        cursor.execute('SELECT id, title, description, url, published_at, thumbnail_url FROM videos ORDER BY title ASC')
+        cursor.execute('SELECT id, title, description, url, published_at, thumbnail_url, video_type FROM videos ORDER BY title ASC')
         videos = cursor.fetchall()
         conn.close()
 
@@ -124,6 +125,7 @@ def index():
                 'description': v['description'],
                 'published_at': v['published_at'],
                 'thumbnail_url': v['thumbnail_url'],
+                'video_type': v['video_type'] or 'uncategorized',
                 'category': 'No songs extracted yet',
                 'part_number': 1,
                 'total_parts': 1,
