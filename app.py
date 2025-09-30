@@ -4,9 +4,15 @@ import json
 import sys
 sys.path.append('config')
 from admin_config import ADMIN_USERNAME, ADMIN_PASSWORD, AUTO_LOGIN, SECRET_KEY
+from openai import OpenAI
 
 app = Flask(__name__)
 app.secret_key = SECRET_KEY
+
+# OpenAI client for re-extraction
+openai_client = OpenAI(
+    api_key="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"
+)
 
 def get_songs():
     conn = sqlite3.connect('database/piano_jazz_videos.db')
@@ -15,6 +21,7 @@ def get_songs():
     cursor.execute('''
         SELECT
             id,
+            video_id,
             song_title,
             composer,
             timestamp,
@@ -92,6 +99,58 @@ def index():
 
     songs = get_songs()
 
+    # If no songs, show videos instead for re-extraction
+    if not songs and session.get('admin'):
+        conn = sqlite3.connect('database/piano_jazz_videos.db')
+        conn.row_factory = sqlite3.Row
+        cursor = conn.cursor()
+        cursor.execute('SELECT id, title, description, url, published_at FROM videos ORDER BY title ASC')
+        videos = cursor.fetchall()
+        conn.close()
+
+        video_list = []
+        for v in videos:
+            video_list.append({
+                'id': None,
+                'video_id': v['id'],
+                'title': v['title'],
+                'url': v['url'],
+                'video_title': v['title'],
+                'description': v['description'],
+                'published_at': v['published_at'],
+                'category': 'No songs extracted yet',
+                'part_number': 1,
+                'total_parts': 1,
+                'composer': '',
+                'performer': '',
+                'original_artist': '',
+                'composition_year': None,
+                'style': '',
+                'era': '',
+                'album': '',
+                'record_label': '',
+                'recording_year': None,
+                'featured_artists': None,
+                'context_notes': 'Click Re-extract to populate metadata'
+            })
+
+        return render_template('index.html',
+                             videos=video_list,
+                             sort=sort,
+                             category='all',
+                             categories=[],
+                             search=search,
+                             video_type=video_type,
+                             composer_filter='all',
+                             performer_filter='all',
+                             style_filter='all',
+                             era_filter='all',
+                             composers=[],
+                             performers=[],
+                             styles=[],
+                             eras=[],
+                             is_admin=session.get('admin', False))
+
     # Process songs
     processed = []
     for s in songs:
@@ -122,6 +181,7 @@ def index():
 
         processed.append({
             'id': s['id'],
+            'video_id': s['video_id'],
             'title': s['song_title'],
             'composer': s['composer'] or '',
             'performer': s['performer'] or '',
@@ -275,6 +335,181 @@ def update_song():
         if 'locked' in str(e):
             return jsonify({'success': False, 'error': 'Database is locked. Enrichment script is running. Please try again later.'}), 503
         return jsonify({'success': False, 'error': str(e)}), 500
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@app.route('/api/reextract_video', methods=['POST'])
+def reextract_video():
+    if not session.get('admin'):
+        return jsonify({'success': False, 'error': 'Unauthorized'}), 401
+
+    data = request.get_json()
+    video_id = data.get('video_id')
+
+    if not video_id:
+        return jsonify({'success': False, 'error': 'Missing video_id'}), 400
+
+    try:
+        conn = sqlite3.connect('database/piano_jazz_videos.db', timeout=10.0)
+        cursor = conn.cursor()
+
+        # Get video data
+        cursor.execute('SELECT id, title, description, url FROM videos WHERE id = ?', (video_id,))
+        video = cursor.fetchone()
+
+        if not video:
+            return jsonify({'success': False, 'error': 'Video not found'}), 404
+
+        vid_id, title, description, url = video
+
+        # Run LLM extraction (same prompt as llm_full_extract.py)
+        prompt = f"""You are analyzing a Piano Jazz Concept YouTube video to catalog which songs/pieces have been analyzed.
+
+VIDEO TITLE: {title}
+VIDEO URL: {url}
+FULL DESCRIPTION:
+{description or ''}
+
+CRITICAL CONTEXT:
+- Piano Jazz Concept is Étienne Guéreau's educational jazz channel
+- NEVER list Étienne as "performer" - he's the analyst/demonstrator, NOT the artist to catalog
+- Focus on WHICH ARTISTS' RECORDINGS are being analyzed/discussed
+- If title says "avec Brad Mehldau" → Brad is the featured performer
+- If analyzing a specific song/artist clearly → extract that song
+- If comparing multiple artists' versions → create SEPARATE entries for each
+
+IMPORTANT - BE CONSERVATIVE:
+- ONLY extract songs that are CLEARLY mentioned in title or description
+- If video is theory/discussion with NO SPECIFIC SONGS → return empty array []
+- DO NOT make up songs or use generic examples
+- DO NOT default to any particular song if unclear
+- If unsure → return empty array []
+
+YOUR TASK:
+Extract ALL songs/pieces analyzed in this video with MAXIMUM metadata.
+
+Use THREE sources:
+1. Video title/description to identify songs and artists
+2. Your training data to fill gaps and add context
+3. Your knowledge of jazz history, famous recordings, albums, etc.
+
+EXTRACT EVERYTHING (but only if songs are clearly present):
+- Song title (MUST be explicitly mentioned in title/description)
+- Composer(s)
+- Performer/Artist (whose recording/version is being analyzed - NEVER Étienne)
+  - From title: "avec Brad Mehldau" → Brad Mehldau
+  - From description: "analyse du solo de Coltrane" → John Coltrane
+  - If song mentioned but no performer → use your knowledge to identify famous version
+  - If no specific recording mentioned → leave null
+- Original artist (if it's a cover/arrangement)
+- Album name (if mentioned OR if you know which famous album)
+- Record label (if you know it)
+- Recording year (if mentioned OR if you know the famous recording year)
+- Composition year
+- Style/genre
+- Era/decade
+- Featured artists (all artists mentioned in title/description)
+- Context notes (analyzing specific recording? comparing versions? theory video?)
+- Timestamp (if provided)
+
+Return JSON array:
+- If songs found: return array with song objects
+- If NO songs mentioned/analyzed: return empty array []
+- Even if single song, return array with 1 item
+
+Example response:
+[
+  {{
+    "song_title": "song name",
+    "composer": "who wrote it",
+    "performer": "whose recording is analyzed (NEVER Étienne)",
+    "original_artist": "if it's a cover",
+    "album": "album name if known",
+    "record_label": "label if known",
+    "recording_year": year or null,
+    "composition_year": year or null,
+    "style": "genre/style",
+    "era": "decade/era",
+    "featured_artists": ["artist1", "artist2"],
+    "timestamp": "MM:SS or null",
+    "context_notes": "context about this analysis",
+    "additional_info": "anything else valuable"
+  }}
+]
+
+Or if no songs: []
+
+Be comprehensive BUT conservative! Only extract what's actually there."""
+
+        response = openai_client.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=[
+                {"role": "system", "content": "You are a music metadata extraction expert specializing in jazz. Return only valid JSON arrays. Use your full training knowledge to add comprehensive metadata."},
+                {"role": "user", "content": prompt}
+            ],
+            temperature=0,
+            max_tokens=2000
+        )
+
+        response_content = response.choices[0].message.content
+
+        # Strip markdown code blocks if present
+        if response_content.startswith('```'):
+            lines = response_content.split('\n')
+            response_content = '\n'.join(lines[1:-1])
+
+        songs = json.loads(response_content)
+        if not isinstance(songs, list):
+            songs = [songs]
+
+        # Delete old songs for this video
+        cursor.execute('DELETE FROM songs WHERE video_id = ?', (vid_id,))
+
+        # Insert new songs
+        for song_idx, song in enumerate(songs, 1):
+            featured_artists = song.get('featured_artists')
+            if isinstance(featured_artists, list):
+                featured_artists = json.dumps(featured_artists)
+
+            cursor.execute('''
+                INSERT INTO songs (
+                    video_id, song_title, composer, performer,
+                    original_artist, timestamp, composition_year,
+                    style, era, additional_info,
+                    part_number, total_parts,
+                    album, record_label, recording_year,
+                    featured_artists, context_notes,
+                    video_title, video_url, video_description, published_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ''', (
+                vid_id,
+                song.get('song_title', title),
+                song.get('composer'),
+                song.get('performer'),
+                song.get('original_artist'),
+                song.get('timestamp'),
+                song.get('composition_year'),
+                song.get('style'),
+                song.get('era'),
+                song.get('additional_info'),
+                song_idx,
+                len(songs),
+                song.get('album'),
+                song.get('record_label'),
+                song.get('recording_year'),
+                featured_artists,
+                song.get('context_notes'),
+                title,
+                url,
+                description,
+                None
+            ))
+
+        conn.commit()
+        conn.close()
+
+        return jsonify({'success': True, 'songs_extracted': len(songs)})
+
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)}), 500
 

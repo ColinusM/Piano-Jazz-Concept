@@ -27,9 +27,15 @@ CRITICAL CONTEXT:
 - NEVER list Étienne as "performer" - he's the analyst/demonstrator, NOT the artist to catalog
 - Focus on WHICH ARTISTS' RECORDINGS are being analyzed/discussed
 - If title says "avec Brad Mehldau" → Brad is the featured performer
-- If analyzing "Coltrane's Giant Steps" → Coltrane is the performer
-- If just "Giant Steps" with no artist → use your knowledge (original = John Coltrane)
+- If analyzing a specific song/artist clearly → extract that song
 - If comparing multiple artists' versions → create SEPARATE entries for each
+
+IMPORTANT - BE CONSERVATIVE:
+- ONLY extract songs that are CLEARLY mentioned in title or description
+- If video is theory/discussion with NO SPECIFIC SONGS → return empty array []
+- DO NOT make up songs or use generic examples
+- DO NOT default to any particular song if unclear
+- If unsure → return empty array []
 
 YOUR TASK:
 Extract ALL songs/pieces analyzed in this video with MAXIMUM metadata.
@@ -39,13 +45,13 @@ Use THREE sources:
 2. Your training data to fill gaps and add context
 3. Your knowledge of jazz history, famous recordings, albums, etc.
 
-EXTRACT EVERYTHING:
-- Song title
+EXTRACT EVERYTHING (but only if songs are clearly present):
+- Song title (MUST be explicitly mentioned in title/description)
 - Composer(s)
 - Performer/Artist (whose recording/version is being analyzed - NEVER Étienne)
   - From title: "avec Brad Mehldau" → Brad Mehldau
   - From description: "analyse du solo de Coltrane" → John Coltrane
-  - From your knowledge: "Giant Steps" → John Coltrane (if not specified)
+  - If song mentioned but no performer → use your knowledge to identify famous version
   - If no specific recording mentioned → leave null
 - Original artist (if it's a cover/arrangement)
 - Album name (if mentioned OR if you know which famous album)
@@ -59,8 +65,7 @@ EXTRACT EVERYTHING:
 - Timestamp (if provided)
 
 MULTIPLE VERSIONS:
-If video compares/analyzes multiple artists' versions, create SEPARATE entries:
-Example: "Giant Steps: Coltrane vs Tommy Flanagan" → 2 entries
+If video compares/analyzes multiple artists' versions, create SEPARATE entries
 
 NO LIMITATIONS:
 Add as much information as you can from your training data. If you know the song:
@@ -69,7 +74,12 @@ Add as much information as you can from your training data. If you know the song
 - Notable musicians
 - Anything valuable for cataloging
 
-Return JSON array. Even if single song, return array:
+Return JSON array:
+- If songs found: return array with song objects
+- If NO songs mentioned/analyzed: return empty array []
+- Even if single song, return array with 1 item
+
+Example response:
 [
   {{
     "song_title": "song name",
@@ -89,7 +99,9 @@ Return JSON array. Even if single song, return array:
   }}
 ]
 
-Be comprehensive! Use video content AND your training knowledge."""
+Or if no songs: []
+
+Be comprehensive BUT conservative! Only extract what's actually there."""
 
     try:
         response = client.chat.completions.create(

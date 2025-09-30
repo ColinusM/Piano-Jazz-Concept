@@ -267,6 +267,27 @@
             background: #a01830;
         }
 
+        .reextract-btn {
+            background: #2a2a2a;
+            color: #fff;
+            border: 1px solid #c41e3a;
+            padding: 0.4rem 0.8rem;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            display: block;
+            width: 100%;
+        }
+
+        .reextract-btn:hover {
+            background: #c41e3a;
+        }
+
+        .reextract-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
         select {
             padding: 0.6rem 1.2rem;
             background: #333;
@@ -506,6 +527,13 @@
                     {% if video.total_parts > 1 %}
                     <p class="video-origin">Extrait de: {{ video.video_title }}</p>
                     {% endif %}
+
+                    {% if is_admin %}
+                    <button class="reextract-btn" onclick="reextractVideo({{ video.video_id }}, this)" style="margin-top: 0.5rem;">
+                        🔄 Re-extract
+                    </button>
+                    {% endif %}
+
                     <a href="{{ video.url }}" target="_blank" class="video-link">
                         ▶ Voir sur YouTube
                     </a>
@@ -707,6 +735,43 @@
                 alert('Erreur réseau: ' + error.message);
                 fieldValue.style.display = '';
                 input.remove();
+            }
+        }
+
+        async function reextractVideo(videoId, button) {
+            if (!confirm('Re-extract metadata for this video? This will replace all current data.')) {
+                return;
+            }
+
+            const originalText = button.textContent;
+            button.disabled = true;
+            button.textContent = '⏳ Extracting...';
+
+            try {
+                const response = await fetch('/api/reextract_video', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        video_id: videoId
+                    })
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    alert(`✅ Success! Extracted ${result.songs_extracted} song(s). Refreshing page...`);
+                    location.reload();
+                } else {
+                    alert('❌ Error: ' + (result.error || 'Unknown error'));
+                    button.disabled = false;
+                    button.textContent = originalText;
+                }
+            } catch (error) {
+                alert('❌ Network error: ' + error.message);
+                button.disabled = false;
+                button.textContent = originalText;
             }
         }
     </script>
