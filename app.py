@@ -261,7 +261,8 @@ def index():
     elif sort == 'theme':
         processed.sort(key=lambda x: (x['category'], x['title'].lower()))
     elif sort == 'date':
-        processed.sort(key=lambda x: x['published_at'], reverse=True)
+        # Handle None values in published_at - put them at the end
+        processed.sort(key=lambda x: (x['published_at'] is None, x['published_at'] or ''), reverse=True)
 
     # Get all unique values for filter dropdowns (from ALL songs, not just filtered)
     all_songs = get_songs()
@@ -517,6 +518,8 @@ Be comprehensive BUT conservative! Only extract what's actually there.
 
         # Delete old songs for this video
         cursor.execute('DELETE FROM songs WHERE video_id = ?', (vid_id,))
+        deleted_count = cursor.rowcount
+        print(f"[REEXTRACT] Deleted {deleted_count} old songs for video {vid_id}")
 
         # Insert new songs
         for song_idx, song in enumerate(songs, 1):
@@ -557,8 +560,10 @@ Be comprehensive BUT conservative! Only extract what's actually there.
                 description,
                 None
             ))
+            print(f"[REEXTRACT] Inserted song {song_idx}/{len(songs)}: {song.get('song_title', title)}")
 
         conn.commit()
+        print(f"[REEXTRACT] Successfully committed {len(songs)} songs for video {vid_id}")
         conn.close()
 
         return jsonify({'success': True, 'songs_extracted': len(songs)})
