@@ -6,6 +6,22 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Piano Jazz Concept Video Catalog - A Flask web application that indexes and displays YouTube videos from the Piano Jazz Concept channel. The app scrapes video data, extracts individual songs from compilation videos, and provides a searchable, categorized interface.
 
+## CRITICAL: Videos vs Songs
+
+**NEVER confuse VIDEOS with SONGS:**
+
+- **VIDEOS** = Raw YouTube videos scraped from the channel (stored in `videos` table)
+  - ~193 videos total
+  - Each video has: id, video_id, title, description, url, published_at, thumbnail_url
+
+- **SONGS** = Individual songs/pieces analyzed within videos (stored in `songs` table)
+  - A video can contain 0, 1, or multiple songs
+  - A video analyzing 5 different jazz standards = 5 songs in the songs table
+  - A video about jazz theory with no specific songs = 0 songs in the songs table
+  - Each song references its parent video via `video_id` foreign key
+
+The web interface displays SONGS (not videos), with each song card showing which video it came from.
+
 ## Running the Application
 
 ```bash
@@ -24,11 +40,12 @@ The application follows a multi-step data pipeline that must be run in order:
    - Creates/updates the `videos` table in the database
    - Must be run from the `utils/` directory due to relative path `../database/piano_jazz_videos.db`
 
-2. **Extract and categorize songs**: `cd utils && python create_songs_table.py`
-   - Parses video descriptions to extract individual songs with timestamps
-   - Distinguishes between compilation videos (3+ segments) and single-song videos
-   - Creates/updates the `songs` table with parsed data
+2. **Extract and categorize songs**: `cd utils && python llm_full_extract.py`
+   - Uses OpenAI GPT-4o-mini to analyze video titles/descriptions and extract song metadata
+   - Extracts: song title, composer, performer, album, recording year, style, era, etc.
+   - Creates/updates the `songs` table with LLM-extracted data
    - Must be run from the `utils/` directory
+   - This populates the songs table from the videos table (193 videos → ~500+ songs)
 
 3. **Optional - Count songs**: `cd utils && python count_songs.py`
    - Utility script to get statistics on the database
@@ -44,10 +61,11 @@ SQLite database at `database/piano_jazz_videos.db` with two main tables:
 - Fields: id, video_id, title, description, url, published_at
 
 **songs table:**
-- Stores individual songs extracted from video descriptions
-- Fields: id, video_id (FK), song_title, composer, timestamp, part_number, total_parts
-- Compilation videos have multiple rows with same video_id but different part_numbers
-- Single-song videos have total_parts=1
+- Stores individual songs/pieces analyzed in videos (extracted via LLM from video titles/descriptions)
+- Fields: id, video_id (FK), song_title, composer, performer, original_artist, album, record_label, recording_year, composition_year, style, era, featured_artists, context_notes, timestamp, part_number, total_parts, video_title, video_url, video_description, published_at
+- One video can produce 0, 1, or many song entries
+- Videos with multiple songs have same video_id but different part_numbers
+- Videos with no specific songs analyzed = 0 entries in songs table
 
 ### Video Categorization
 
@@ -70,9 +88,8 @@ Timestamps from video descriptions are automatically converted to YouTube URL pa
 
 - `app.py` - Main Flask application (run from project root)
 - `utils/` - Data pipeline scripts (run from utils/ directory)
-  - `scrape_youtube.py` - YouTube API scraper
-  - `create_songs_table.py` - Song extraction and parsing
-  - `extract_songs.py` - Legacy extraction script
+  - `scrape_youtube.py` - YouTube API scraper (populates videos table)
+  - `llm_full_extract.py` - LLM-based song extraction (populates songs table from videos)
   - `count_songs.py` - Database statistics
 - `database/` - SQLite database file
 - `config/` - Google API credentials (client_secret JSON)

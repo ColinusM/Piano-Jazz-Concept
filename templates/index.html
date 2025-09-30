@@ -498,6 +498,9 @@
     </div>
 
     <div class="controls">
+        <a href="/?sort={{ sort }}" class="btn" style="background: #c41e3a; border-color: #c41e3a;">
+            🎬 Show All Videos
+        </a>
         <a href="/?sort=alpha&category={{ category }}&search={{ search }}&type={{ video_type }}&composer={{ composer_filter }}&performer={{ performer_filter }}&style={{ style_filter }}&era={{ era_filter }}" class="btn {% if sort == 'alpha' %}active{% endif %}">
             📝 Alphabétique
         </a>
@@ -676,6 +679,10 @@
                         <button class="reextract-btn" onclick="reextractVideo({{ video.video_id }}, this)">
                             🔄 Re-extract
                         </button>
+                        <button class="reextract-btn" onclick="getTranscript('{{ video.url }}', {{ video.video_id }})" style="margin-top: 0.5rem;">
+                            📜 Get Transcript
+                        </button>
+                        <div id="transcript-{{ video.video_id }}" class="transcript-display" style="display: none; margin-top: 0.5rem; background: #1a1a1a; padding: 1rem; border-radius: 4px; max-height: 300px; overflow-y: auto; font-size: 0.85rem; line-height: 1.6; white-space: pre-wrap;"></div>
                     </div>
                     {% endif %}
 
@@ -929,6 +936,44 @@
             }
         }
         {% endif %}
+
+        async function getTranscript(videoUrl, videoId) {
+            const transcriptDiv = document.getElementById('transcript-' + videoId);
+            if (!transcriptDiv) {
+                console.error('Transcript div not found for video ID:', videoId);
+                return;
+            }
+
+            // Clear previous content
+            transcriptDiv.textContent = '⏳ Fetching transcript...';
+            transcriptDiv.style.display = 'block';
+            transcriptDiv.style.color = '#4a9eff';
+
+            try {
+                const response = await fetch('/api/get_transcript', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        video_url: videoUrl
+                    })
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    transcriptDiv.textContent = result.transcript;
+                    transcriptDiv.style.color = '#e0e0e0';
+                } else {
+                    transcriptDiv.textContent = '❌ ' + (result.error || 'Unknown error');
+                    transcriptDiv.style.color = '#ff6b6b';
+                }
+            } catch (error) {
+                transcriptDiv.textContent = '❌ Network error: ' + error.message;
+                transcriptDiv.style.color = '#ff6b6b';
+            }
+        }
 
         async function reextractVideo(videoId, button) {
             const guidanceInput = document.getElementById('guidance-' + videoId);

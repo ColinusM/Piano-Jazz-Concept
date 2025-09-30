@@ -2,9 +2,11 @@ from flask import Flask, render_template, request, session, jsonify
 import sqlite3
 import json
 import sys
+import re
 sys.path.append('config')
 from admin_config import ADMIN_USERNAME, ADMIN_PASSWORD, AUTO_LOGIN, SECRET_KEY
 from openai import OpenAI
+from youtube_transcript_api import YouTubeTranscriptApi
 
 app = Flask(__name__)
 app.secret_key = SECRET_KEY
@@ -562,6 +564,104 @@ Be comprehensive BUT conservative! Only extract what's actually there.
 
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)}), 500
+
+@app.route('/api/get_transcript', methods=['POST'])
+def get_transcript():
+    print("=== TRANSCRIPT REQUEST RECEIVED ===")
+    if not session.get('admin'):
+        return jsonify({'success': False, 'error': 'Unauthorized'}), 401
+
+    data = request.get_json()
+    video_url = data.get('video_url')
+    print(f"Video URL: {video_url}")
+
+    if not video_url:
+        return jsonify({'success': False, 'error': 'Missing video_url'}), 400
+
+    try:
+        # Extract video ID from URL
+        match = re.search(r'(?:v=|\/)([0-9A-Za-z_-]{11}).*', video_url)
+        if not match:
+            return jsonify({'success': False, 'error': 'Invalid YouTube URL'}), 400
+
+        video_id = match.group(1)
+        print(f"Video ID: {video_id}")
+
+        # Try to fetch transcript with multiple language options
+        transcript_list = None
+        error_messages = []
+
+        # Try to get transcript - prefer French but accept any language
+        transcript_api = None
+        try:
+            transcript_api = YouTubeTranscriptApi.list_transcripts(video_id)
+        except Exception as e:
+            error_messages.append(f"Could not list transcripts: {str(e)}")
+            print(f"✗ Could not list transcripts for {video_id}: {e}")
+            transcript_list = None
+
+        if transcript_api:
+            # Try different transcript options in order of preference
+            found = False
+
+            # 1. French manual transcript
+            if not found:
+                try:
+                    transcript = transcript_api.find_manually_created_transcript(['fr'])
+                    transcript_list = transcript.fetch()
+                    print(f"✓ Found French manual transcript for {video_id}")
+                    found = True
+                except Exception as e:
+                    error_messages.append(f"French manual: {str(e)}")
+
+            # 2. French auto-generated
+            if not found:
+                try:
+                    transcript = transcript_api.find_generated_transcript(['fr'])
+                    transcript_list = transcript.fetch()
+                    print(f"✓ Found French auto-generated transcript for {video_id}")
+                    found = True
+                except Exception as e:
+                    error_messages.append(f"French auto: {str(e)}")
+
+            # 3. English manual, translate to French
+            if not found:
+                try:
+                    transcript = transcript_api.find_manually_created_transcript(['en', 'en-US'])
+                    translated = transcript.translate('fr')
+                    transcript_list = translated.fetch()
+                    print(f"✓ Found English manual transcript, translated to French for {video_id}")
+                    found = True
+                except Exception as e:
+                    error_messages.append(f"English manual: {str(e)}")
+
+            # 4. English auto-generated, translate to French
+            if not found:
+                try:
+                    transcript = transcript_api.find_generated_transcript(['en', 'en-US'])
+                    translated = transcript.translate('fr')
+                    transcript_list = translated.fetch()
+                    print(f"✓ Found English auto-generated transcript, translated to French for {video_id}")
+                    found = True
+                except Exception as e:
+                    error_messages.append(f"English auto: {str(e)}")
+                    transcript_list = None
+
+        if not transcript_list:
+            error_msg = f'No transcript available for video {video_id}. This video may not have captions/subtitles enabled.\n\nDetails:\n' + '\n'.join(error_messages)
+            print(f"❌ No transcript found for {video_id}")
+            return jsonify({
+                'success': False,
+                'error': error_msg
+            }), 404
+
+        # Format transcript as text
+        transcript_text = '\n'.join([f"[{entry['start']:.1f}s] {entry['text']}" for entry in transcript_list])
+
+        return jsonify({'success': True, 'transcript': transcript_text})
+
+    except Exception as e:
+        return jsonify({'success': False, 'error': f'Could not fetch transcript: {str(e)}'}), 500
 
 if __name__ == '__main__':
     import os
