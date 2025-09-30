@@ -1,6 +1,37 @@
 import sqlite3
 import re
 
+def extract_artist_from_title(title):
+    """Extract artist/composer names from title"""
+    # Patterns: "Artist | Song", "Song (Artist)", "Artist : Song"
+    patterns = [
+        r'([^|]+)\s*\|\s*',  # Artist | Song
+        r'\(([^)]+)\)',      # (Artist)
+        r'([^:]+)\s*:\s*',   # Artist : Song
+        r'feat\.\s+([^&]+)', # feat. Artist
+    ]
+
+    for pattern in patterns:
+        match = re.search(pattern, title)
+        if match:
+            return match.group(1).strip()
+    return ''
+
+def is_likely_song_name(text):
+    """Check if text looks like a song name"""
+    text = text.strip()
+    # Must be reasonable length
+    if len(text) < 3 or len(text) > 100:
+        return False
+    # Should not be just a URL or time
+    if re.match(r'^https?://', text) or re.match(r'^\d{1,2}:\d{2}', text):
+        return False
+    # Should not be generic text
+    generic = ['intro', 'outro', 'conclusion', 'bases', 'concert', 'code promo']
+    if text.lower() in generic:
+        return False
+    return True
+
 conn = sqlite3.connect('piano_jazz_videos.db')
 cursor = conn.cursor()
 
@@ -26,32 +57,44 @@ cursor.execute('SELECT id, title, description, url FROM videos')
 videos = cursor.fetchall()
 
 for vid_id, title, desc, url in videos:
-    # Extract timestamps and following text
+    # Extract artist/composer from title first
+    main_artist = extract_artist_from_title(title)
+
+    # Extract timestamps and following text from BOTH title and description
     # Pattern: timestamp (HH:MM or MM:SS) followed by text until next timestamp or newline
     timestamp_pattern = r'(\d{1,2}:\d{2})\s*([^\n]+?)(?=\n\d{1,2}:\d{2}|\n\n|$)'
     matches = re.findall(timestamp_pattern, desc, re.DOTALL)
 
-    if len(matches) >= 3:  # Compilation video with multiple segments
-        total_parts = len(matches)
-        for idx, (timestamp, segment_title) in enumerate(matches, 1):
-            # Clean up segment title
-            segment_title = segment_title.strip()
-            # Remove URLs
-            segment_title = re.sub(r'https?://\S+', '', segment_title).strip()
+    # Filter matches to only include likely song names
+    valid_matches = []
+    for timestamp, segment_title in matches:
+        segment_title = segment_title.strip()
+        # Remove URLs
+        segment_title = re.sub(r'https?://\S+', '', segment_title).strip()
+
+        if is_likely_song_name(segment_title):
+            valid_matches.append((timestamp, segment_title))
+
+    if len(valid_matches) >= 3:  # Compilation video with multiple segments
+        total_parts = len(valid_matches)
+        for idx, (timestamp, segment_title) in enumerate(valid_matches, 1):
             # Limit length
             if len(segment_title) > 100:
                 segment_title = segment_title[:100] + '...'
 
-            # Try to extract composer
+            # Try to extract composer from segment or use main artist
             composer = ''
             composer_match = re.search(r'\(([^)]+)\)', segment_title)
             if composer_match:
                 composer = composer_match.group(1)
+                segment_title = re.sub(r'\s*\([^)]+\)', '', segment_title).strip()
+            elif main_artist:
+                composer = main_artist
 
             cursor.execute('''
                 INSERT INTO songs (video_id, song_title, composer, timestamp, part_number, total_parts)
                 VALUES (?, ?, ?, ?, ?, ?)
-            ''', (vid_id, segment_title if segment_title else f"Part {idx}", composer, timestamp, idx, total_parts))
+            ''', (vid_id, segment_title, composer, timestamp, idx, total_parts))
     else:
         # Single song video
         # Extract composer from title if present
@@ -68,6 +111,10 @@ for vid_id, title, desc, url in videos:
             clean_title = parts[0].strip()
             if not composer and len(parts) > 1:
                 composer = parts[1].strip()
+
+        # Use main_artist if no composer found
+        if not composer:
+            composer = main_artist
 
         cursor.execute('''
             INSERT INTO songs (video_id, song_title, composer, timestamp, part_number, total_parts)
