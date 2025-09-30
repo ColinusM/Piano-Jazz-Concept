@@ -722,7 +722,7 @@
 
     <div class="container">
         <div class="stats">
-            <p>{{ videos|length }} {% if view == 'videos' %}vidéo(s){% else %}morceau(x){% endif %} trouvé(s)</p>
+            <p>{{ videos|length }} {% if view == 'videos' %}{% if videos|length > 1 %}vidéos trouvées{% elif videos|length == 1 %}vidéo trouvée{% else %}vidéos trouvées{% endif %}{% else %}{% if videos|length > 1 %}morceaux trouvés{% else %}morceau trouvé{% endif %}{% endif %}</p>
         </div>
 
         <div class="video-grid">
@@ -891,7 +891,7 @@
                         <input type="text"
                                class="prompt-guidance-input"
                                id="guidance-{{ video.video_id }}"
-                               placeholder="Add guidance (e.g., 'focus on solos', 'extract all timestamps')..."
+                               placeholder="e.g. search Louis Cole album title &quot;Message&quot;"
                                title="Optional: Add specific instructions to guide the LLM extraction (e.g., 'focus on Brad Mehldau's solo', 'extract all chord changes', 'identify the specific album version')">
                         <button class="reextract-btn" onclick="reextractVideo({{ video.video_id }}, this)" title="Re-run LLM extraction with current guidance to update song metadata">
                             🔄 Re-extract
