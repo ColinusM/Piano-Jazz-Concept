@@ -157,7 +157,8 @@ def index():
                              performers=[],
                              styles=[],
                              eras=[],
-                             is_admin=session.get('admin', False))
+                             is_admin=session.get('admin', False),
+                             view=view)
 
     # Process songs
     processed = []
@@ -296,7 +297,8 @@ def index():
                          performers=all_performers,
                          styles=all_styles,
                          eras=all_eras,
-                         is_admin=session.get('admin', False))
+                         is_admin=session.get('admin', False),
+                         view=view)
 
 @app.route('/api/login', methods=['POST'])
 def login():

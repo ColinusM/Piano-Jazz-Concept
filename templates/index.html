@@ -559,7 +559,7 @@
 
     <div class="container">
         <div class="stats">
-            <p>{{ videos|length }} morceau(x) trouvé(s)</p>
+            <p>{{ videos|length }} {% if view == 'videos' %}vidéo(s){% else %}morceau(x){% endif %} trouvé(s)</p>
         </div>
 
         <div class="video-grid">
