@@ -183,6 +183,90 @@
             text-decoration: underline;
         }
 
+        .editable-field {
+            position: relative;
+            display: inline;
+        }
+
+        .editable-field:hover .edit-icon {
+            display: inline;
+        }
+
+        .edit-icon {
+            display: none;
+            margin-left: 0.3rem;
+            color: #c41e3a;
+            cursor: pointer;
+            font-size: 0.8rem;
+        }
+
+        .editable-field input {
+            background: #444;
+            color: #fff;
+            border: 1px solid #c41e3a;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-size: inherit;
+            width: 100%;
+        }
+
+        .admin-indicator {
+            position: fixed;
+            top: 1rem;
+            right: 1rem;
+            background: #c41e3a;
+            color: #fff;
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            font-size: 0.85rem;
+            z-index: 1000;
+        }
+
+        .undo-notification {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            background: #2a2a2a;
+            color: #fff;
+            padding: 1rem 1.5rem;
+            border-radius: 4px;
+            border: 1px solid #c41e3a;
+            z-index: 1000;
+            display: none;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+        }
+
+        .undo-notification.show {
+            display: block;
+            animation: slideIn 0.3s ease-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateY(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .undo-btn {
+            background: #c41e3a;
+            color: #fff;
+            border: none;
+            padding: 0.4rem 1rem;
+            border-radius: 3px;
+            cursor: pointer;
+            margin-left: 1rem;
+            font-size: 0.9rem;
+        }
+
+        .undo-btn:hover {
+            background: #a01830;
+        }
+
         select {
             padding: 0.6rem 1.2rem;
             background: #333;
@@ -229,6 +313,14 @@
     </style>
 </head>
 <body>
+    {% if is_admin %}
+    <div class="admin-indicator">👑 Mode Admin</div>
+    <div class="undo-notification" id="undoNotification">
+        <span id="undoMessage"></span>
+        <button class="undo-btn" onclick="undoLastChange()">↶ Annuler (Cmd+Z)</button>
+    </div>
+    {% endif %}
+
     <header>
         <h1>🎹 Piano Jazz Concept</h1>
         <p class="subtitle">Catalogue complet des analyses musicales</p>
@@ -282,26 +374,80 @@
                     {% if video.total_parts > 1 %}
                     <span class="part-badge">Partie {{ video.part_number }}/{{ video.total_parts }}</span>
                     {% endif %}
-                    <h3 class="video-title">{{ video.title }}</h3>
+                    <h3 class="video-title">
+                        {% if is_admin %}
+                        <span class="editable-field" data-id="{{ video.id }}" data-field="song_title">
+                            <span class="field-value">{{ video.title }}</span>
+                            <span class="edit-icon" onclick="editField(this)">✏️</span>
+                        </span>
+                        {% else %}
+                        {{ video.title }}
+                        {% endif %}
+                    </h3>
 
-                    {% if video.original_artist %}
-                    <p class="composer">🎤 Original: {{ video.original_artist }}</p>
+                    {% if video.original_artist or is_admin %}
+                    <p class="composer">🎤 Original:
+                        {% if is_admin %}
+                        <span class="editable-field" data-id="{{ video.id }}" data-field="original_artist">
+                            <span class="field-value">{{ video.original_artist or 'Non renseigné' }}</span>
+                            <span class="edit-icon" onclick="editField(this)">✏️</span>
+                        </span>
+                        {% else %}
+                        {{ video.original_artist }}
+                        {% endif %}
+                    </p>
                     {% endif %}
 
-                    {% if video.composer %}
-                    <p class="composer">🎵 Compositeur: {{ video.composer }}</p>
+                    {% if video.composer or is_admin %}
+                    <p class="composer">🎵 Compositeur:
+                        {% if is_admin %}
+                        <span class="editable-field" data-id="{{ video.id }}" data-field="composer">
+                            <span class="field-value">{{ video.composer or 'Non renseigné' }}</span>
+                            <span class="edit-icon" onclick="editField(this)">✏️</span>
+                        </span>
+                        {% else %}
+                        {{ video.composer }}
+                        {% endif %}
+                    </p>
                     {% endif %}
 
-                    {% if video.performer %}
-                    <p class="composer">🎹 Interprète: {{ video.performer }}</p>
+                    {% if video.performer or is_admin %}
+                    <p class="composer">🎹 Interprète:
+                        {% if is_admin %}
+                        <span class="editable-field" data-id="{{ video.id }}" data-field="performer">
+                            <span class="field-value">{{ video.performer or 'Non renseigné' }}</span>
+                            <span class="edit-icon" onclick="editField(this)">✏️</span>
+                        </span>
+                        {% else %}
+                        {{ video.performer }}
+                        {% endif %}
+                    </p>
                     {% endif %}
 
-                    {% if video.composition_year %}
-                    <p class="composer">📅 Année: {{ video.composition_year }}</p>
+                    {% if video.composition_year or is_admin %}
+                    <p class="composer">📅 Année:
+                        {% if is_admin %}
+                        <span class="editable-field" data-id="{{ video.id }}" data-field="composition_year">
+                            <span class="field-value">{{ video.composition_year or 'Non renseigné' }}</span>
+                            <span class="edit-icon" onclick="editField(this)">✏️</span>
+                        </span>
+                        {% else %}
+                        {{ video.composition_year }}
+                        {% endif %}
+                    </p>
                     {% endif %}
 
-                    {% if video.style %}
-                    <p class="composer">🎼 Style: {{ video.style }}</p>
+                    {% if video.style or is_admin %}
+                    <p class="composer">🎼 Style:
+                        {% if is_admin %}
+                        <span class="editable-field" data-id="{{ video.id }}" data-field="style">
+                            <span class="field-value">{{ video.style or 'Non renseigné' }}</span>
+                            <span class="edit-icon" onclick="editField(this)">✏️</span>
+                        </span>
+                        {% else %}
+                        {{ video.style }}
+                        {% endif %}
+                    </p>
                     {% endif %}
 
                     {% if video.total_parts > 1 %}
@@ -325,6 +471,89 @@
     </div>
 
     <script>
+        // Undo stack to track changes
+        let undoStack = [];
+        let undoTimeout = null;
+
+        // Listen for Cmd+Z / Ctrl+Z
+        document.addEventListener('keydown', (e) => {
+            if ((e.metaKey || e.ctrlKey) && e.key === 'z' && !e.shiftKey) {
+                e.preventDefault();
+                undoLastChange();
+            }
+        });
+
+        function showUndoNotification(message) {
+            const notification = document.getElementById('undoNotification');
+            const messageSpan = document.getElementById('undoMessage');
+            messageSpan.textContent = message;
+            notification.classList.add('show');
+
+            // Clear previous timeout
+            if (undoTimeout) {
+                clearTimeout(undoTimeout);
+            }
+
+            // Hide after 5 seconds
+            undoTimeout = setTimeout(() => {
+                notification.classList.remove('show');
+            }, 5000);
+        }
+
+        function hideUndoNotification() {
+            const notification = document.getElementById('undoNotification');
+            notification.classList.remove('show');
+        }
+
+        async function undoLastChange() {
+            if (undoStack.length === 0) {
+                return;
+            }
+
+            const lastChange = undoStack.pop();
+            hideUndoNotification();
+
+            try {
+                const response = await fetch('/api/update_song', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        id: lastChange.songId,
+                        field: lastChange.field,
+                        value: lastChange.oldValue
+                    })
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    // Update the UI
+                    const editableField = document.querySelector(
+                        `[data-id="${lastChange.songId}"][data-field="${lastChange.field}"]`
+                    );
+                    if (editableField) {
+                        const fieldValue = editableField.querySelector('.field-value');
+                        fieldValue.textContent = lastChange.oldValue || 'Non renseigné';
+                    }
+
+                    // Show success message briefly
+                    const notification = document.getElementById('undoNotification');
+                    const messageSpan = document.getElementById('undoMessage');
+                    messageSpan.textContent = '✓ Modification annulée';
+                    notification.classList.add('show');
+                    setTimeout(() => {
+                        notification.classList.remove('show');
+                    }, 2000);
+                } else {
+                    alert('Erreur lors de l\'annulation: ' + (result.error || 'Unknown error'));
+                }
+            } catch (error) {
+                alert('Erreur réseau: ' + error.message);
+            }
+        }
+
         function toggleDescription(id) {
             const desc = document.getElementById('desc-' + id);
             const btn = document.getElementById('btn-' + id);
@@ -335,6 +564,96 @@
             } else {
                 desc.classList.add('truncated');
                 btn.textContent = 'Lire la suite';
+            }
+        }
+
+        function editField(editIcon) {
+            const editableField = editIcon.parentElement;
+            const fieldValue = editableField.querySelector('.field-value');
+            const currentValue = fieldValue.textContent.trim();
+            const songId = editableField.dataset.id;
+            const field = editableField.dataset.field;
+
+            // Replace with input
+            const input = document.createElement('input');
+            input.type = 'text';
+            input.value = currentValue === 'Non renseigné' ? '' : currentValue;
+            input.dataset.originalValue = currentValue;
+
+            // Save on blur or Enter
+            input.addEventListener('blur', () => saveField(input, fieldValue, songId, field));
+            input.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') {
+                    input.blur();
+                } else if (e.key === 'Escape') {
+                    fieldValue.textContent = input.dataset.originalValue;
+                    fieldValue.style.display = '';
+                    input.remove();
+                    editIcon.style.display = '';
+                }
+            });
+
+            fieldValue.style.display = 'none';
+            editIcon.style.display = 'none';
+            editableField.insertBefore(input, fieldValue);
+            input.focus();
+            input.select();
+        }
+
+        async function saveField(input, fieldValue, songId, field) {
+            const newValue = input.value.trim();
+            const originalValue = input.dataset.originalValue;
+
+            // If no change, just restore
+            if (newValue === originalValue || (newValue === '' && originalValue === 'Non renseigné')) {
+                fieldValue.style.display = '';
+                input.remove();
+                return;
+            }
+
+            // Store old value for undo
+            const oldValue = originalValue === 'Non renseigné' ? null : originalValue;
+
+            try {
+                const response = await fetch('/api/update_song', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        id: songId,
+                        field: field,
+                        value: newValue || null
+                    })
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    // Add to undo stack
+                    undoStack.push({
+                        songId: songId,
+                        field: field,
+                        oldValue: oldValue,
+                        newValue: newValue || null
+                    });
+
+                    // Update UI
+                    fieldValue.textContent = newValue || 'Non renseigné';
+                    fieldValue.style.display = '';
+                    input.remove();
+
+                    // Show undo notification
+                    showUndoNotification(`Modifié: ${field} → "${newValue || 'vide'}"`);
+                } else {
+                    alert('Erreur lors de la sauvegarde: ' + (result.error || 'Unknown error'));
+                    fieldValue.style.display = '';
+                    input.remove();
+                }
+            } catch (error) {
+                alert('Erreur réseau: ' + error.message);
+                fieldValue.style.display = '';
+                input.remove();
             }
         }
     </script>

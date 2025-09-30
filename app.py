@@ -1,8 +1,12 @@
-from flask import Flask, render_template, request
+from flask import Flask, render_template, request, session, jsonify
 import sqlite3
 import json
+import sys
+sys.path.append('config')
+from admin_config import ADMIN_USERNAME, ADMIN_PASSWORD, AUTO_LOGIN, SECRET_KEY
 
 app = Flask(__name__)
+app.secret_key = SECRET_KEY
 
 def get_songs():
     conn = sqlite3.connect('database/piano_jazz_videos.db')
@@ -69,6 +73,10 @@ def categorize_video(title, description):
 
 @app.route('/')
 def index():
+    # Auto-login for testing
+    if AUTO_LOGIN and 'admin' not in session:
+        session['admin'] = True
+
     sort = request.args.get('sort', 'alpha')
     category = request.args.get('category', 'all')
     search = request.args.get('search', '').strip()
@@ -102,6 +110,7 @@ def index():
             pass
 
         processed.append({
+            'id': s['id'],
             'title': s['song_title'],
             'composer': s['composer'] or '',
             'performer': s['performer'] or '',
@@ -163,7 +172,52 @@ def index():
                          category=category,
                          categories=all_categories,
                          search=search,
-                         video_type=video_type)
+                         video_type=video_type,
+                         is_admin=session.get('admin', False))
+
+@app.route('/api/login', methods=['POST'])
+def login():
+    data = request.get_json()
+    if data.get('username') == ADMIN_USERNAME and data.get('password') == ADMIN_PASSWORD:
+        session['admin'] = True
+        return jsonify({'success': True})
+    return jsonify({'success': False}), 401
+
+@app.route('/api/logout', methods=['POST'])
+def logout():
+    session.pop('admin', None)
+    return jsonify({'success': True})
+
+@app.route('/api/update_song', methods=['POST'])
+def update_song():
+    if not session.get('admin'):
+        return jsonify({'success': False, 'error': 'Unauthorized'}), 401
+
+    data = request.get_json()
+    song_id = data.get('id')
+    field = data.get('field')
+    value = data.get('value')
+
+    # Validate field name to prevent SQL injection
+    allowed_fields = ['song_title', 'composer', 'performer', 'original_artist',
+                     'composition_year', 'style', 'era', 'additional_info']
+
+    if field not in allowed_fields:
+        return jsonify({'success': False, 'error': 'Invalid field'}), 400
+
+    try:
+        conn = sqlite3.connect('database/piano_jazz_videos.db', timeout=10.0)
+        cursor = conn.cursor()
+        cursor.execute(f'UPDATE songs SET {field} = ? WHERE id = ?', (value, song_id))
+        conn.commit()
+        conn.close()
+        return jsonify({'success': True})
+    except sqlite3.OperationalError as e:
+        if 'locked' in str(e):
+            return jsonify({'success': False, 'error': 'Database is locked. Enrichment script is running. Please try again later.'}), 503
+        return jsonify({'success': False, 'error': str(e)}), 500
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
 
 if __name__ == '__main__':
     app.run(debug=True, port=5000)
