@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Index des Morceaux - Piano Jazz Concept</title>
+    <link rel="icon" type="image/png" href="/static/images/favicon.png">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Courier New', monospace;
+            background: #fafafa;
+            padding: 2rem;
+            color: #000;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 2rem;
+            padding-bottom: 1rem;
+            border-bottom: 3px solid #000;
+        }
+
+        h1 {
+            font-size: 2rem;
+            font-weight: bold;
+            margin-bottom: 0.5rem;
+        }
+
+        .subtitle {
+            font-size: 1rem;
+            color: #666;
+        }
+
+        .nav-buttons {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .nav-button {
+            display: inline-block;
+            padding: 0.6rem 1.5rem;
+            background: #fff;
+            border: 2px solid #000;
+            color: #000;
+            text-decoration: none;
+            font-weight: bold;
+            margin: 0 0.5rem;
+            transition: all 0.2s;
+        }
+
+        .nav-button:hover {
+            background: #000;
+            color: #fff;
+        }
+
+        .index-container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: #fff;
+            padding: 2rem;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .song-entry {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            padding: 0.3rem 0;
+            border-bottom: 1px dotted #ccc;
+            line-height: 1.8;
+        }
+
+        .song-entry:hover {
+            background: #f5f5f5;
+        }
+
+        .song-title {
+            font-weight: bold;
+            text-transform: uppercase;
+            flex-shrink: 0;
+            max-width: 60%;
+        }
+
+        .song-dots {
+            flex-grow: 1;
+            border-bottom: 1px dotted #999;
+            margin: 0 0.5rem;
+            min-width: 20px;
+        }
+
+        .song-info {
+            text-align: right;
+            flex-shrink: 0;
+            max-width: 35%;
+            font-size: 0.9em;
+            color: #666;
+        }
+
+        .letter-header {
+            font-size: 1.5rem;
+            font-weight: bold;
+            margin-top: 2rem;
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background: #000;
+            color: #fff;
+            text-align: center;
+        }
+
+        .letter-header:first-of-type {
+            margin-top: 0;
+        }
+
+        .total-count {
+            text-align: center;
+            margin-top: 2rem;
+            padding-top: 1rem;
+            border-top: 3px solid #000;
+            font-weight: bold;
+        }
+
+        @media print {
+            body {
+                background: #fff;
+                padding: 0;
+            }
+
+            .nav-buttons {
+                display: none;
+            }
+
+            .index-container {
+                box-shadow: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>INDEX DES MORCEAUX</h1>
+        <p class="subtitle">Piano Jazz Concept - Catalogue Alphabétique</p>
+    </div>
+
+    <div class="nav-buttons">
+        <a href="/?view=songs" class="nav-button">← Vue Détaillée</a>
+        <a href="/?view=videos" class="nav-button">Vue Vidéos</a>
+        <a href="javascript:window.print()" class="nav-button">🖨️ Imprimer</a>
+    </div>
+
+    <div class="index-container">
+        {% set current_letter = '' %}
+        {% for song in songs %}
+            {% set first_letter = song.song_title[0]|upper %}
+            {% if first_letter != current_letter %}
+                {% set current_letter = first_letter %}
+                <div class="letter-header">{{ current_letter }}</div>
+            {% endif %}
+
+            <div class="song-entry">
+                <span class="song-title">{{ song.song_title }}</span>
+                <span class="song-dots"></span>
+                <span class="song-info">
+                    {% if song.composer and song.performer %}
+                        {{ song.composer }} / {{ song.performer }}
+                    {% elif song.composer %}
+                        {{ song.composer }}
+                    {% elif song.performer %}
+                        {{ song.performer }}
+                    {% else %}
+                        -
+                    {% endif %}
+                </span>
+            </div>
+        {% endfor %}
+
+        <div class="total-count">
+            Total: {{ songs|length }} morceaux
+        </div>
+    </div>
+</body>
+</html>

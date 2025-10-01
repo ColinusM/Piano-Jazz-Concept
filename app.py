@@ -146,6 +146,27 @@ def index():
 
     songs = get_songs()
 
+    # Index view - Real Book style alphabetical list
+    if view == 'index':
+        # Get all songs, sorted alphabetically
+        processed = []
+        for s in songs:
+            processed.append({
+                'id': s['id'],
+                'song_title': s['song_title'] or 'Sans titre',
+                'composer': s['composer'] or '',
+                'performer': s['performer'] or '',
+                'album': s['album'] or '',
+                'style': s['style'] or ''
+            })
+
+        # Sort alphabetically by song title
+        processed.sort(key=lambda x: x['song_title'].lower())
+
+        return render_template('index_view.html',
+                             songs=processed,
+                             is_admin=session.get('admin', False))
+
     # If view=videos or no songs, show videos instead for re-extraction
     if (view == 'videos' or not songs) and session.get('admin'):
         conn = sqlite3.connect(DATABASE_PATH)
