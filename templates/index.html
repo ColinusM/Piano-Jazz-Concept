@@ -1091,7 +1091,7 @@
                         {% if is_admin %}
                         <span class="editable-field" data-id="{{ video.id }}" data-field="composer">
                             {% if video.composer and video.composer != 'Non renseigné' %}
-                            <a href="/?composer={{ video.composer|urlencode }}#cards" class="filter-link">{{ video.composer }}</a>
+                            <a href="/?composer={{ video.composer|urlencode }}#cards" class="filter-link"><span class="field-value">{{ video.composer }}</span></a>
                             {% else %}
                             <span class="field-value">{{ video.composer or 'Non renseigné' }}</span>
                             {% endif %}
@@ -1110,7 +1110,7 @@
                         {% if is_admin %}
                         <span class="editable-field" data-id="{{ video.id }}" data-field="performer">
                             {% if video.performer and video.performer != 'Non renseigné' %}
-                            <a href="/?performer={{ video.performer|urlencode }}#cards" class="filter-link">{{ video.performer }}</a>
+                            <a href="/?performer={{ video.performer|urlencode }}#cards" class="filter-link"><span class="field-value">{{ video.performer }}</span></a>
                             {% else %}
                             <span class="field-value">{{ video.performer or 'Non renseigné' }}</span>
                             {% endif %}
@@ -1142,7 +1142,7 @@
                         {% if is_admin %}
                         <span class="editable-field" data-id="{{ video.id }}" data-field="style">
                             {% if video.style and video.style != 'Non renseigné' %}
-                            <a href="/?style={{ video.style|urlencode }}#cards" class="filter-link">{{ video.style }}</a>
+                            <a href="/?style={{ video.style|urlencode }}#cards" class="filter-link"><span class="field-value">{{ video.style }}</span></a>
                             {% else %}
                             <span class="field-value">{{ video.style or 'Non renseigné' }}</span>
                             {% endif %}
@@ -1161,7 +1161,7 @@
                         {% if is_admin %}
                         <span class="editable-field" data-id="{{ video.id }}" data-field="era">
                             {% if video.era and video.era != 'Non renseigné' %}
-                            <a href="/?era={{ video.era|urlencode }}#cards" class="filter-link">{{ video.era }}</a>
+                            <a href="/?era={{ video.era|urlencode }}#cards" class="filter-link"><span class="field-value">{{ video.era }}</span></a>
                             {% else %}
                             <span class="field-value">{{ video.era or 'Non renseigné' }}</span>
                             {% endif %}
@@ -1507,6 +1507,10 @@
             const songId = editableField.dataset.id;
             const field = editableField.dataset.field;
 
+            // Check if fieldValue is inside a link
+            const linkParent = fieldValue.closest('a.filter-link');
+            const elementToHide = linkParent || fieldValue;
+
             // Replace with input
             const input = document.createElement('input');
             input.type = 'text';
@@ -1514,32 +1518,33 @@
             input.dataset.originalValue = currentValue;
 
             // Save on blur or Enter
-            input.addEventListener('blur', () => saveField(input, fieldValue, songId, field));
+            input.addEventListener('blur', () => saveField(input, fieldValue, linkParent, songId, field));
             input.addEventListener('keydown', (e) => {
                 if (e.key === 'Enter') {
                     input.blur();
                 } else if (e.key === 'Escape') {
                     fieldValue.textContent = input.dataset.originalValue;
-                    fieldValue.style.display = '';
+                    elementToHide.style.display = '';
                     input.remove();
                     editIcon.style.display = '';
                 }
             });
 
-            fieldValue.style.display = 'none';
+            elementToHide.style.display = 'none';
             editIcon.style.display = 'none';
-            editableField.insertBefore(input, fieldValue);
+            editableField.insertBefore(input, elementToHide);
             input.focus();
             input.select();
         }
 
-        async function saveField(input, fieldValue, songId, field) {
+        async function saveField(input, fieldValue, linkParent, songId, field) {
             const newValue = input.value.trim();
             const originalValue = input.dataset.originalValue;
+            const elementToShow = linkParent || fieldValue;
 
             // If no change, just restore
             if (newValue === originalValue || (newValue === '' && originalValue === 'Non renseigné')) {
-                fieldValue.style.display = '';
+                elementToShow.style.display = '';
                 input.remove();
                 return;
             }
@@ -1573,19 +1578,19 @@
 
                     // Update UI
                     fieldValue.textContent = newValue || 'Non renseigné';
-                    fieldValue.style.display = '';
+                    elementToShow.style.display = '';
                     input.remove();
 
                     // Show undo notification
                     showUndoNotification(`Modifié: ${field} → "${newValue || 'vide'}"`);
                 } else {
                     alert('Erreur lors de la sauvegarde: ' + (result.error || 'Unknown error'));
-                    fieldValue.style.display = '';
+                    elementToShow.style.display = '';
                     input.remove();
                 }
             } catch (error) {
                 alert('Erreur réseau: ' + error.message);
-                fieldValue.style.display = '';
+                elementToShow.style.display = '';
                 input.remove();
             }
         }

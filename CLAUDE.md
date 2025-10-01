@@ -165,3 +165,50 @@ Recent design changes (as of commit 400b998):
 - Minimal grey/white color scheme throughout
 - Compact, minimalist buttons for admin actions
 - Clean visual hierarchy for song metadata display
+
+## Troubleshooting: Clickable Filters + Editable Fields
+
+**Issue:** When making metadata fields (composer, performer, style, era) clickable for filtering, the inline edit functionality broke.
+
+**Symptoms:**
+- Clicking the ✏️ edit icon would make the text disappear
+- No input box would appear
+- Unable to edit the field
+
+**Root Cause:**
+The JavaScript `editField()` function looked for `.field-value` elements to hide/show during editing. Originally, `.field-value` was a standalone `<span>`:
+
+```html
+<span class="field-value">Miles Davis</span>
+```
+
+When we made fields clickable, we wrapped the value in a link:
+
+```html
+<a href="/?composer=Miles%20Davis#cards" class="filter-link">Miles Davis</a>
+```
+
+The JavaScript would hide `.field-value` (now the link text), but the parent `<a>` tag remained visible, so the value disappeared but no input appeared in its place.
+
+**Solution:**
+1. Wrap `.field-value` inside the link to preserve JavaScript targeting:
+   ```html
+   <a href="/?composer=Miles%20Davis#cards" class="filter-link">
+     <span class="field-value">Miles Davis</span>
+   </a>
+   ```
+
+2. Update `editField()` to detect and hide the link parent if it exists:
+   ```javascript
+   const linkParent = fieldValue.closest('a.filter-link');
+   const elementToHide = linkParent || fieldValue;
+   elementToHide.style.display = 'none';
+   ```
+
+3. Update `saveField()` to receive `linkParent` parameter and show/hide the correct element.
+
+**Key Lesson:** When wrapping editable elements in interactive containers (links, buttons), ensure the JavaScript that manipulates them is aware of the container and targets it appropriately for visibility changes.
+
+**Files Modified:**
+- `templates/index.html` lines 1503-1596 (editField and saveField functions)
+- `templates/index.html` lines 1094, 1113, 1145, 1164 (field structure)
