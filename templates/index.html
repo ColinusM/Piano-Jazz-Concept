@@ -426,6 +426,16 @@
             font-size: 0.8rem;
         }
 
+        .filter-link {
+            color: inherit;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        .filter-link:hover {
+            text-decoration: underline;
+        }
+
         .editable-field input {
             background: #fff;
             color: #333;
@@ -1026,7 +1036,7 @@
                 <div class="video-content">
                     {% if is_admin %}
                     <div class="category-container">
-                        <span class="category-badge">{{ video.category }}</span>
+                        <a href="/?category={{ video.category|urlencode }}#cards" class="filter-link"><span class="category-badge">{{ video.category }}</span></a>
                         <span class="category-edit-icon" onclick="toggleCategoryDropdown(event, {{ video.id }}, '{{ video.category }}')">✏️</span>
                         <div id="category-dropdown-{{ video.id }}" class="category-dropdown">
                             <div class="category-option" onclick="updateCategory({{ video.id }}, 'Génériques TV')">Génériques TV</div>
@@ -1039,7 +1049,7 @@
                         </div>
                     </div>
                     {% else %}
-                    <span class="category-badge">{{ video.category }}</span>
+                    <a href="/?category={{ video.category|urlencode }}#cards" class="filter-link"><span class="category-badge">{{ video.category }}</span></a>
                     {% endif %}
                     {% if video.total_parts and video.total_parts > 1 %}
                     <span class="part-badge">Partie {{ video.part_number }}/{{ video.total_parts }}</span>
@@ -1080,11 +1090,17 @@
                     <p class="composer">🎵 Compositeur:
                         {% if is_admin %}
                         <span class="editable-field" data-id="{{ video.id }}" data-field="composer">
+                            {% if video.composer and video.composer != 'Non renseigné' %}
+                            <a href="/?composer={{ video.composer|urlencode }}#cards" class="filter-link">{{ video.composer }}</a>
+                            {% else %}
                             <span class="field-value">{{ video.composer or 'Non renseigné' }}</span>
+                            {% endif %}
                             <span class="edit-icon" onclick="editField(this)">✏️</span>
                         </span>
                         {% else %}
-                        {{ video.composer }}
+                        {% if video.composer %}
+                        <a href="/?composer={{ video.composer|urlencode }}#cards" class="filter-link">{{ video.composer }}</a>
+                        {% endif %}
                         {% endif %}
                     </p>
                     {% endif %}
@@ -1093,11 +1109,17 @@
                     <p class="composer">🎹 Interprète:
                         {% if is_admin %}
                         <span class="editable-field" data-id="{{ video.id }}" data-field="performer">
+                            {% if video.performer and video.performer != 'Non renseigné' %}
+                            <a href="/?performer={{ video.performer|urlencode }}#cards" class="filter-link">{{ video.performer }}</a>
+                            {% else %}
                             <span class="field-value">{{ video.performer or 'Non renseigné' }}</span>
+                            {% endif %}
                             <span class="edit-icon" onclick="editField(this)">✏️</span>
                         </span>
                         {% else %}
-                        {{ video.performer }}
+                        {% if video.performer %}
+                        <a href="/?performer={{ video.performer|urlencode }}#cards" class="filter-link">{{ video.performer }}</a>
+                        {% endif %}
                         {% endif %}
                     </p>
                     {% endif %}
@@ -1119,11 +1141,17 @@
                     <p class="composer">🎼 Style:
                         {% if is_admin %}
                         <span class="editable-field" data-id="{{ video.id }}" data-field="style">
+                            {% if video.style and video.style != 'Non renseigné' %}
+                            <a href="/?style={{ video.style|urlencode }}#cards" class="filter-link">{{ video.style }}</a>
+                            {% else %}
                             <span class="field-value">{{ video.style or 'Non renseigné' }}</span>
+                            {% endif %}
                             <span class="edit-icon" onclick="editField(this)">✏️</span>
                         </span>
                         {% else %}
-                        {{ video.style }}
+                        {% if video.style %}
+                        <a href="/?style={{ video.style|urlencode }}#cards" class="filter-link">{{ video.style }}</a>
+                        {% endif %}
                         {% endif %}
                     </p>
                     {% endif %}
@@ -1132,11 +1160,17 @@
                     <p class="composer">⏰ Era:
                         {% if is_admin %}
                         <span class="editable-field" data-id="{{ video.id }}" data-field="era">
+                            {% if video.era and video.era != 'Non renseigné' %}
+                            <a href="/?era={{ video.era|urlencode }}#cards" class="filter-link">{{ video.era }}</a>
+                            {% else %}
                             <span class="field-value">{{ video.era or 'Non renseigné' }}</span>
+                            {% endif %}
                             <span class="edit-icon" onclick="editField(this)">✏️</span>
                         </span>
                         {% else %}
-                        {{ video.era }}
+                        {% if video.era %}
+                        <a href="/?era={{ video.era|urlencode }}#cards" class="filter-link">{{ video.era }}</a>
+                        {% endif %}
                         {% endif %}
                     </p>
                     {% endif %}
