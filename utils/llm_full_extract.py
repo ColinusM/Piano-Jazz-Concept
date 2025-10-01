@@ -111,7 +111,6 @@ Be comprehensive BUT conservative! Only extract what's actually there."""
                 {"role": "system", "content": "You are a music metadata extraction expert specializing in jazz. Return only valid JSON arrays. Use your full training knowledge to add comprehensive metadata."},
                 {"role": "user", "content": prompt}
             ],
-            temperature=0,
             max_completion_tokens=2000  # Increased for more detailed responses
         )
 
