@@ -5,10 +5,14 @@ import sys
 import re
 import os
 import shutil
+from dotenv import load_dotenv
 sys.path.append('config')
 from admin_config import ADMIN_USERNAME, ADMIN_PASSWORD, AUTO_LOGIN, SECRET_KEY
 from openai import OpenAI
 from youtube_transcript_api import YouTubeTranscriptApi
+
+# Load environment variables
+load_dotenv()
 
 app = Flask(__name__)
 app.secret_key = SECRET_KEY
@@ -53,7 +57,7 @@ ensure_category_columns()
 
 # OpenAI client for re-extraction
 openai_client = OpenAI(
-    api_key="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"
+    api_key=os.getenv('OPENAI_API_KEY')
 )
 
 def get_songs():

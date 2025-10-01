@@ -6,9 +6,12 @@ import sqlite3
 import json
 import os
 from openai import OpenAI
+from dotenv import load_dotenv
+
+load_dotenv()
 
 client = OpenAI(
-    api_key="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"
+    api_key=os.getenv('OPENAI_API_KEY')
 )
 
 def extract_video_data(video_title, video_description, video_url):

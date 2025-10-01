@@ -3,8 +3,11 @@ import sqlite3
 import json
 import html
 import os
+from dotenv import load_dotenv
 
-API_KEY = 'AIzaSyBM3GSMWBG78DNAj5xVFkvKIZ687HVf3lM'
+load_dotenv()
+
+API_KEY = os.getenv('YOUTUBE_API_KEY')
 CHANNEL_HANDLE = 'Pianojazzconcept'
 
 # Use persistent disk on Render, local path otherwise
