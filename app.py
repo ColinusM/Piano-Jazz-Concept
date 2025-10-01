@@ -155,13 +155,30 @@ def index():
         # Get all songs, sorted alphabetically
         processed = []
         for s in songs:
+            # Build URL with timestamp
+            url = s['url'] or ''
+            if url and s['timestamp']:
+                # Convert MM:SS to seconds
+                timestamp = s['timestamp']
+                if timestamp and ':' in timestamp:
+                    parts = timestamp.split(':')
+                    if len(parts) == 2:
+                        try:
+                            minutes = int(parts[0])
+                            seconds = int(parts[1])
+                            total_seconds = minutes * 60 + seconds
+                            url = f"{url}&t={total_seconds}s"
+                        except ValueError:
+                            pass
+
             processed.append({
                 'id': s['id'],
                 'song_title': s['song_title'] or 'Sans titre',
                 'composer': s['composer'] or '',
                 'performer': s['performer'] or '',
                 'album': s['album'] or '',
-                'style': s['style'] or ''
+                'style': s['style'] or '',
+                'url': url
             })
 
         # Sort alphabetically by song title

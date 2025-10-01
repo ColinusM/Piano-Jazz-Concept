@@ -37,6 +37,21 @@
             color: #666;
         }
 
+        .legend {
+            font-size: 0.85rem;
+            color: #888;
+            margin-top: 1rem;
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 0.3rem;
+        }
+
         .nav-buttons {
             text-align: center;
             margin-bottom: 2rem;
@@ -78,6 +93,19 @@
 
         .song-entry:hover {
             background: #f5f5f5;
+        }
+
+        .card-icon {
+            color: #999;
+            text-decoration: none;
+            font-size: 1.2em;
+            margin-right: 0.5rem;
+            transition: color 0.2s;
+            vertical-align: middle;
+        }
+
+        .card-icon:hover {
+            color: #000;
         }
 
         .song-title {
@@ -142,6 +170,14 @@
     <div class="header">
         <h1>INDEX DES MORCEAUX</h1>
         <p class="subtitle">Piano Jazz Concept - Catalogue Alphabétique</p>
+        <div class="legend">
+            <div class="legend-item">
+                <span>▪ ↷ Fiche</span>
+            </div>
+            <div class="legend-item">
+                <span>Titre ↷ Vidéo YouTube</span>
+            </div>
+        </div>
     </div>
 
     <div class="nav-buttons">
@@ -153,7 +189,8 @@
     <div class="index-container">
         {% for song in songs %}
             <div class="song-entry">
-                <span class="song-title"><a href="/?search={{ song.song_title }}">{{ song.song_title }}</a></span>
+                <a href="/?search={{ song.song_title }}" class="card-icon">▪</a>
+                <span class="song-title"><a href="{{ song.url }}" target="_blank">{{ song.song_title }}</a></span>
                 <span class="song-dots"></span>
                 <span class="song-info">
                     {% if song.composer and song.performer %}
