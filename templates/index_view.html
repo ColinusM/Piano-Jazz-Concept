@@ -87,6 +87,15 @@
             max-width: 60%;
         }
 
+        .song-title a {
+            color: #000;
+            text-decoration: none;
+        }
+
+        .song-title a:hover {
+            text-decoration: underline;
+        }
+
         .song-dots {
             flex-grow: 1;
             border-bottom: 1px dotted #999;
@@ -100,21 +109,6 @@
             max-width: 35%;
             font-size: 0.9em;
             color: #666;
-        }
-
-        .letter-header {
-            font-size: 1.5rem;
-            font-weight: bold;
-            margin-top: 2rem;
-            margin-bottom: 0.5rem;
-            padding: 0.5rem;
-            background: #000;
-            color: #fff;
-            text-align: center;
-        }
-
-        .letter-header:first-of-type {
-            margin-top: 0;
         }
 
         .total-count {
@@ -154,16 +148,9 @@
     </div>
 
     <div class="index-container">
-        {% set current_letter = '' %}
         {% for song in songs %}
-            {% set first_letter = song.song_title[0]|upper %}
-            {% if first_letter != current_letter %}
-                {% set current_letter = first_letter %}
-                <div class="letter-header">{{ current_letter }}</div>
-            {% endif %}
-
             <div class="song-entry">
-                <span class="song-title">{{ song.song_title }}</span>
+                <span class="song-title"><a href="/?search={{ song.song_title }}">{{ song.song_title }}</a></span>
                 <span class="song-dots"></span>
                 <span class="song-info">
                     {% if song.composer and song.performer %}
