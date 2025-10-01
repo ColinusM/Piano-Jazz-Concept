@@ -595,7 +595,7 @@ Be comprehensive BUT conservative! Only extract what's actually there.
                 {"role": "user", "content": prompt}
             ],
             temperature=0,
-            max_tokens=2000
+            max_tokens=4000  # Increased for videos with many songs
         )
 
         response_content = response.choices[0].message.content
@@ -605,7 +605,14 @@ Be comprehensive BUT conservative! Only extract what's actually there.
             lines = response_content.split('\n')
             response_content = '\n'.join(lines[1:-1])
 
-        songs = json.loads(response_content)
+        try:
+            songs = json.loads(response_content)
+        except json.JSONDecodeError as e:
+            # Log the problematic response for debugging
+            print(f"[REEXTRACT ERROR] JSON decode failed: {e}")
+            print(f"[REEXTRACT ERROR] Response content (first 500 chars):\n{response_content[:500]}")
+            print(f"[REEXTRACT ERROR] Response content (last 500 chars):\n{response_content[-500:]}")
+            return jsonify({'success': False, 'error': f'Invalid JSON from LLM: {str(e)}. Response may be truncated - try shorter video or contact support.'}), 500
         if not isinstance(songs, list):
             songs = [songs]
 
