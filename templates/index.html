@@ -1003,7 +1003,7 @@
             <p>{{ videos|length }} {% if view == 'videos' %}{% if videos|length > 1 %}vidéos trouvées{% elif videos|length == 1 %}vidéo trouvée{% else %}vidéos trouvées{% endif %}{% else %}{% if videos|length > 1 %}morceaux trouvés{% else %}morceau trouvé{% endif %}{% endif %}</p>
         </div>
 
-        <div class="video-grid">
+        <div id="cards" class="video-grid">
             {% for video in videos %}
             <div class="video-card" data-title="{{ video.title }}" data-letter="{{ video.title[0]|upper if video.title else '#' }}" data-song-id="{{ video.id }}">
                 {% if is_admin %}

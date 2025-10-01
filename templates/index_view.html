@@ -189,7 +189,7 @@
     <div class="index-container">
         {% for song in songs %}
             <div class="song-entry">
-                <a href="/?search={{ song.song_title }}" class="card-icon">▪</a>
+                <a href="/?search={{ song.song_title }}#cards" class="card-icon">▪</a>
                 <span class="song-title"><a href="{{ song.url }}" target="_blank">{{ song.song_title }}</a></span>
                 <span class="song-dots"></span>
                 <span class="song-info">
