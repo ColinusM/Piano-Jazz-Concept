@@ -138,7 +138,6 @@ def index():
     if AUTO_LOGIN and 'admin' not in session and 'logged_out' not in session:
         session['admin'] = True
 
-    sort = request.args.get('sort', 'alpha')
     category = request.args.get('category', 'all')
     search = request.args.get('search', '').strip()
     video_type = request.args.get('type', 'all')  # all, compilation, single, non-analysis
@@ -279,7 +278,6 @@ def index():
 
         return render_template('index.html',
                              videos=video_list,
-                             sort=sort,
                              category='all',
                              categories=[],
                              search=search,
@@ -390,14 +388,8 @@ def index():
     if era_filter != 'all':
         processed = [s for s in processed if s['era'] and era_filter.lower() in s['era'].lower()]
 
-    # Sort
-    if sort == 'alpha':
-        processed.sort(key=lambda x: x['title'].lower())
-    elif sort == 'theme':
-        processed.sort(key=lambda x: (x['category'], x['title'].lower()))
-    elif sort == 'date':
-        # Handle None values in published_at - put them at the end
-        processed.sort(key=lambda x: (x['published_at'] is None, x['published_at'] or ''), reverse=True)
+    # Default sort: alphabetical by title
+    processed.sort(key=lambda x: x['title'].lower())
 
     # Get all unique values for filter dropdowns (from ALL songs, not just filtered)
     all_songs = get_songs()
@@ -420,7 +412,6 @@ def index():
 
     return render_template('index.html',
                          videos=processed,
-                         sort=sort,
                          category=category,
                          categories=all_categories,
                          search=search,
