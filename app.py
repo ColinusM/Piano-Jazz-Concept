@@ -501,28 +501,6 @@ def get_master_prompt():
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)}), 500
 
-@app.route('/api/update_video_type', methods=['POST'])
-def update_video_type():
-    if not session.get('admin'):
-        return jsonify({'success': False, 'error': 'Unauthorized'}), 401
-
-    data = request.get_json()
-    video_id = data.get('video_id')
-    video_type = data.get('video_type')
-
-    if not video_id or not video_type:
-        return jsonify({'success': False, 'error': 'Missing parameters'}), 400
-
-    try:
-        conn = sqlite3.connect(DATABASE_PATH)
-        cursor = conn.cursor()
-        cursor.execute('UPDATE videos SET video_type = ? WHERE id = ?', (video_type, video_id))
-        conn.commit()
-        conn.close()
-        return jsonify({'success': True})
-    except Exception as e:
-        return jsonify({'success': False, 'error': str(e)}), 500
-
 @app.route('/api/update_category', methods=['POST'])
 def update_category():
     if not session.get('admin'):

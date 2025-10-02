@@ -1210,19 +1210,6 @@
                     <p class="video-origin">Extrait de: {{ video.video_title }}</p>
                     {% endif %}
 
-                    {% if is_admin %}
-                    <div style="margin-top: 0.5rem;">
-                        <div style="margin-bottom: 0.5rem;">
-                            <label style="font-size: 0.85rem; color: #888; margin-right: 0.5rem;" title="Categorize the video content type">Video Type:</label>
-                            <select id="video-type-{{ video.video_id }}" onchange="updateVideoType({{ video.video_id }}, this.value)" style="background: #f0f0f0; color: #333; border: 1px solid #ddd; border-radius: 4px; padding: 0.3rem; font-size: 0.85rem;" title="Analysis = Video analyzing specific songs/pieces; Non-analysis = Interviews, talks, theory discussions without specific song focus">
-                                <option value="uncategorized" {% if video.video_type == 'uncategorized' %}selected{% endif %}>🔘 Uncategorized</option>
-                                <option value="analysis" {% if video.video_type == 'analysis' %}selected{% endif %}>🎹 Song Analysis</option>
-                                <option value="non-analysis" {% if video.video_type == 'non-analysis' %}selected{% endif %}>💬 Talk/Interview</option>
-                            </select>
-                        </div>
-                    </div>
-                    {% endif %}
-
                     {% if video.description and video.description|length > 150 %}
                     <p class="video-description truncated" id="desc-{{ loop.index }}">{{ video.description }}</p>
                     <span class="read-more-btn" onclick="toggleDescription({{ loop.index }})">
@@ -1617,46 +1604,6 @@
             } catch (error) {
                 console.error('Error deleting song:', error);
                 alert('Failed to delete song');
-            }
-        }
-
-        async function updateVideoType(videoId, videoType) {
-            try {
-                const response = await fetch('/api/update_video_type', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        video_id: videoId,
-                        video_type: videoType
-                    })
-                });
-
-                const result = await response.json();
-                if (result.success) {
-                    // Show minimalist save notification
-                    const notification = document.getElementById('saveNotification');
-                    if (notification) {
-                        const typeLabels = {
-                            'uncategorized': '🔘 Uncategorized',
-                            'analysis': '🎹 Song Analysis',
-                            'non-analysis': '💬 Talk/Interview'
-                        };
-                        notification.textContent = `Saved: ${typeLabels[videoType] || videoType}`;
-                        notification.classList.add('show');
-
-                        // Hide after 1 second
-                        setTimeout(() => {
-                            notification.classList.remove('show');
-                        }, 1000);
-                    }
-                } else {
-                    alert('Failed to update video type: ' + (result.error || 'Unknown error'));
-                }
-            } catch (error) {
-                console.error('Error updating video type:', error);
-                alert('Failed to update video type');
             }
         }
 
