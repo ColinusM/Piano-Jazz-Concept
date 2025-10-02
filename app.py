@@ -632,49 +632,61 @@ def create_song():
 @app.route('/api/get_changelog', methods=['GET'])
 def get_changelog():
     try:
-        changelog_path = 'CHANGELOG.md'
+        changelog_path = 'changelog.md'
         if not os.path.exists(changelog_path):
             return jsonify({'success': True, 'updates': [], 'count': 0})
 
         # Get last seen timestamp from session (default to 0 for first visit)
         last_seen = session.get('changelog_last_seen', 0)
 
-        # Parse changelog file
+        # Parse changelog file with new format
         updates = []
-        current_entry = None
+        current_date = None
+        current_section = None
 
         with open(changelog_path, 'r', encoding='utf-8') as f:
             for line in f:
-                line = line.strip()
-                # Match date headers like "## 2025-10-02 15:30"
-                if line.startswith('## ') and len(line) > 3:
-                    date_str = line[3:].strip()
-                    try:
-                        # Parse the timestamp
-                        entry_time = datetime.strptime(date_str, '%Y-%m-%d %H:%M').timestamp()
+                line_stripped = line.strip()
 
-                        # Save previous entry if exists
-                        if current_entry and current_entry['changes']:
-                            updates.append(current_entry)
+                # Match date headers like "## 2025-10-02"
+                if line_stripped.startswith('## ') and len(line_stripped) > 3:
+                    date_str = line_stripped[3:].strip()
+                    # Skip non-date headers like "Summary Statistics"
+                    if date_str[0].isdigit():
+                        try:
+                            # Parse date without time (assume end of day for comparison)
+                            entry_time = datetime.strptime(date_str, '%Y-%m-%d').replace(hour=23, minute=59).timestamp()
 
-                        # Start new entry
-                        current_entry = {
-                            'date': date_str,
-                            'timestamp': entry_time,
-                            'changes': [],
-                            'is_new': entry_time > last_seen
-                        }
-                    except:
-                        pass
-                # Match bullet points like "- Added feature X"
-                elif line.startswith('- ') and current_entry:
-                    current_entry['changes'].append(line[2:])
+                            # Start new date entry
+                            current_date = {
+                                'date': date_str,
+                                'timestamp': entry_time,
+                                'sections': {},
+                                'is_new': entry_time > last_seen
+                            }
+                            updates.append(current_date)
+                            current_section = None
+                        except:
+                            pass
 
-        # Add last entry
-        if current_entry and current_entry['changes']:
-            updates.append(current_entry)
+                # Match section headers like "### UI/UX Improvements"
+                elif line_stripped.startswith('### ') and current_date:
+                    section_name = line_stripped[4:].strip()
+                    current_section = section_name
+                    current_date['sections'][section_name] = []
 
-        # Count new updates
+                # Match bullet points like "- Feature description (commit)"
+                elif line_stripped.startswith('- ') and current_date:
+                    change = line_stripped[2:].strip()
+                    # If no section yet, put in "General" section
+                    if not current_section:
+                        if 'Général' not in current_date['sections']:
+                            current_date['sections']['Général'] = []
+                        current_date['sections']['Général'].append(change)
+                    else:
+                        current_date['sections'][current_section].append(change)
+
+        # Count new updates (dates, not individual changes)
         new_count = sum(1 for u in updates if u['is_new'])
 
         return jsonify({

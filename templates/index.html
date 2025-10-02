@@ -577,16 +577,48 @@
             color: #2c3e50;
             margin-bottom: 0.5rem;
             font-size: 0.9rem;
+            cursor: pointer;
+            padding: 0.3rem;
+            border-radius: 4px;
+            transition: background-color 0.2s;
+        }
+
+        .notification-date:hover {
+            background-color: #f0f0f0;
+        }
+
+        .notification-date-arrow {
+            display: inline-block;
+            margin-right: 0.5rem;
+            font-size: 0.7rem;
+            transition: transform 0.2s;
+        }
+
+        .notification-sections {
+            margin-left: 1.5rem;
+            margin-top: 0.5rem;
+        }
+
+        .notification-section {
+            margin-bottom: 0.75rem;
+        }
+
+        .notification-section-title {
+            font-weight: 600;
+            color: #555;
+            font-size: 0.85rem;
+            margin-bottom: 0.3rem;
         }
 
         .notification-changes {
-            font-size: 0.85rem;
-            color: #555;
-            line-height: 1.5;
+            font-size: 0.8rem;
+            color: #666;
+            line-height: 1.4;
+            padding-left: 1.2rem;
         }
 
         .notification-changes li {
-            margin-bottom: 0.3rem;
+            margin-bottom: 0.25rem;
         }
 
         .undo-notification {
@@ -1353,17 +1385,47 @@
                 return;
             }
 
-            content.innerHTML = updates.map(update => `
-                <div class="notification-item ${update.is_new ? 'new' : ''}">
-                    <div class="notification-date">${update.date}</div>
-                    <ul class="notification-changes">
-                        ${update.changes.map(change => `<li>${change}</li>`).join('')}
-                    </ul>
-                </div>
-            `).join('');
+            content.innerHTML = updates.map((update, idx) => {
+                const sectionsHtml = Object.entries(update.sections).map(([sectionName, changes]) => {
+                    if (changes.length === 0) return '';
+                    return `
+                        <div class="notification-section">
+                            <div class="notification-section-title">${sectionName}</div>
+                            <ul class="notification-changes">
+                                ${changes.map(change => `<li>${change}</li>`).join('')}
+                            </ul>
+                        </div>
+                    `;
+                }).join('');
+
+                return `
+                    <div class="notification-item ${update.is_new ? 'new' : ''}">
+                        <div class="notification-date" onclick="toggleNotificationDate(${idx})">
+                            <span class="notification-date-arrow" id="arrow-${idx}">▼</span>
+                            ${update.date}
+                        </div>
+                        <div class="notification-sections" id="sections-${idx}" style="display: block;">
+                            ${sectionsHtml}
+                        </div>
+                    </div>
+                `;
+            }).join('');
 
             // Mark as seen after displaying
             markNotificationsSeen();
+        }
+
+        function toggleNotificationDate(idx) {
+            const sections = document.getElementById(`sections-${idx}`);
+            const arrow = document.getElementById(`arrow-${idx}`);
+
+            if (sections.style.display === 'none') {
+                sections.style.display = 'block';
+                arrow.textContent = '▼';
+            } else {
+                sections.style.display = 'none';
+                arrow.textContent = '▶';
+            }
         }
 
         function updateNotificationBadge(count) {

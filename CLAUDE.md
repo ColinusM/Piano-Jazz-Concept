@@ -116,11 +116,6 @@ All utility scripts in `utils/` use relative path `../database/piano_jazz_videos
 
 The application includes admin mode with enhanced features (requires login via `config/admin_config.py`):
 
-### Master Prompt Editor
-- Collapsible editor for modifying the LLM extraction prompt template
-- Saved to `config/prompt_template.txt`
-- Affects all future song extractions via `llm_full_extract.py` and re-extraction
-- Located above the search bar, can be minimized
 
 ### Per-Song Management
 Each song card in admin mode includes:
@@ -145,28 +140,6 @@ Each song card in admin mode includes:
 
 The API key is hardcoded in `utils/scrape_youtube.py:6`. The channel handle is set to 'Pianojazzconcept'. When updating API credentials, also check the `config/` directory for OAuth client secrets.
 
-## YouTube Transcript API
-
-The app can fetch transcripts using `youtube-transcript-api` library (v1.2.2+). Transcript fetching follows this cascading fallback:
-1. French manual transcript
-2. French auto-generated transcript
-3. English manual transcript (translated to French)
-4. English auto-generated transcript (translated to French)
-
-Transcripts are fetched on-demand (not stored in database) to avoid YouTube API rate limits.
-
-## Security Notes
-
-**CRITICAL:** The OpenAI API key is hardcoded in `app.py:16`. Before committing changes or deploying, ensure sensitive credentials are moved to environment variables or secure config files not checked into version control.
-
-## UI Design
-
-Recent design changes (as of commit 400b998):
-- Minimal grey/white color scheme throughout
-- Compact, minimalist buttons for admin actions
-- Clean visual hierarchy for song metadata display
-
-## Troubleshooting: Clickable Filters + Editable Fields
 
 **Issue:** When making metadata fields (composer, performer, style, era) clickable for filtering, the inline edit functionality broke.
 
@@ -175,40 +148,44 @@ Recent design changes (as of commit 400b998):
 - No input box would appear
 - Unable to edit the field
 
-**Root Cause:**
-The JavaScript `editField()` function looked for `.field-value` elements to hide/show during editing. Originally, `.field-value` was a standalone `<span>`:
-
-```html
-<span class="field-value">Miles Davis</span>
-```
-
-When we made fields clickable, we wrapped the value in a link:
-
-```html
-<a href="/?composer=Miles%20Davis#cards" class="filter-link">Miles Davis</a>
-```
-
-The JavaScript would hide `.field-value` (now the link text), but the parent `<a>` tag remained visible, so the value disappeared but no input appeared in its place.
-
-**Solution:**
-1. Wrap `.field-value` inside the link to preserve JavaScript targeting:
-   ```html
-   <a href="/?composer=Miles%20Davis#cards" class="filter-link">
-     <span class="field-value">Miles Davis</span>
-   </a>
-   ```
-
-2. Update `editField()` to detect and hide the link parent if it exists:
-   ```javascript
-   const linkParent = fieldValue.closest('a.filter-link');
-   const elementToHide = linkParent || fieldValue;
-   elementToHide.style.display = 'none';
-   ```
-
-3. Update `saveField()` to receive `linkParent` parameter and show/hide the correct element.
 
 **Key Lesson:** When wrapping editable elements in interactive containers (links, buttons), ensure the JavaScript that manipulates them is aware of the container and targets it appropriately for visibility changes.
 
-**Files Modified:**
-- `templates/index.html` lines 1503-1596 (editField and saveField functions)
-- `templates/index.html` lines 1094, 1113, 1145, 1164 (field structure)
+
+
+
+
+**CRITICAL:** When the user says "ready to push", you MUST:
+
+1. **Commit all current changes** with descriptive message
+2. **Read git log** from HEAD back to the last changelog.md edit to find all uncommitted-to-changelog commits
+3. **Update changelog.md** with ALL those commits in hierarchical format:
+   - Group by date
+   - Categorize appropriately
+   - Include all commit hashes
+   - Add at the TOP of the file
+4. **Commit the changelog update**
+5. **Push to remote** with `git push`
+
+**Example workflow:**
+```bash
+# User says: "ready to push"
+
+# 1. Commit current changes
+git add .
+git commit -m "Update notification bell styling"
+
+# 2. Find commits since last changelog edit
+git log --oneline --until="$(git log -1 --format=%ai -- changelog.md)" HEAD
+
+# 3. Update changelog.md at TOP with all commits grouped by date and category
+
+# 4. Commit changelog
+git add changelog.md
+git commit -m "Update changelog with recent commits"
+
+# 5. Push
+git push
+```
+
+This ensures the changelog is always up-to-date before pushing to remote.
