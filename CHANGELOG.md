@@ -4,6 +4,9 @@ All notable changes to Piano Jazz Concept will be documented in this file.
 
 ## 2025-10-02
 
+### Bug Fixes
+- Fix changelog path to use uppercase CHANGELOG.md (e549679)
+
 ### UI/UX Improvements
 - Update notification bell to read hierarchical changelog format (fa13845)
 - Make notification bell visible to all users (2341bf9)
