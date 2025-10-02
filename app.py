@@ -140,7 +140,6 @@ def index():
 
     category = request.args.get('category', 'all')
     search = request.args.get('search', '').strip()
-    video_type = request.args.get('type', 'all')  # all, compilation, single, non-analysis
     composer_filter = request.args.get('composer', 'all')
     performer_filter = request.args.get('performer', 'all')
     style_filter = request.args.get('style', 'all')
@@ -272,16 +271,11 @@ def index():
 
         conn.close()
 
-        # Apply video_type filter to video_list
-        if video_type != 'all':
-            video_list = [v for v in video_list if v.get('video_type') == video_type]
-
         return render_template('index.html',
                              videos=video_list,
                              category='all',
                              categories=[],
                              search=search,
-                             video_type=video_type,
                              composer_filter='all',
                              performer_filter='all',
                              style_filter='all',
@@ -368,10 +362,6 @@ def index():
     if category != 'all':
         processed = [s for s in processed if s['category'] == category]
 
-    # Filter by video type
-    if video_type != 'all':
-        processed = [s for s in processed if s.get('video_type') == video_type]
-
     # Filter by composer
     if composer_filter != 'all':
         processed = [s for s in processed if s['composer'] and composer_filter.lower() in s['composer'].lower()]
@@ -415,7 +405,6 @@ def index():
                          category=category,
                          categories=all_categories,
                          search=search,
-                         video_type=video_type,
                          composer_filter=composer_filter,
                          performer_filter=performer_filter,
                          style_filter=style_filter,
