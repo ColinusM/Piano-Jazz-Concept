@@ -631,9 +631,6 @@ def create_song():
 
 @app.route('/api/get_changelog', methods=['GET'])
 def get_changelog():
-    if not session.get('admin'):
-        return jsonify({'success': False, 'error': 'Unauthorized'}), 401
-
     try:
         changelog_path = 'CHANGELOG.md'
         if not os.path.exists(changelog_path):
@@ -691,9 +688,6 @@ def get_changelog():
 
 @app.route('/api/mark_changelog_seen', methods=['POST'])
 def mark_changelog_seen():
-    if not session.get('admin'):
-        return jsonify({'success': False, 'error': 'Unauthorized'}), 401
-
     try:
         # Store current timestamp as last seen
         session['changelog_last_seen'] = datetime.now().timestamp()

@@ -984,7 +984,6 @@
         <a href="/login" style="color: #fff; text-decoration: underline;">🔐 Admin Login</a>
     </div>
     {% endif %}
-    {% if is_admin %}
     <div class="notification-bell-container">
         <button class="notification-bell" onclick="toggleNotifications()">
             🔔
@@ -997,7 +996,6 @@
             </div>
         </div>
     </div>
-    {% endif %}
     {% if is_admin %}
     <div class="undo-notification" id="undoNotification">
         <span id="undoMessage"></span>
@@ -1405,10 +1403,8 @@
 
         // Initialize alphabet navigation
         document.addEventListener('DOMContentLoaded', () => {
-            // Initialize notification badge on page load (admin only)
-            {% if is_admin %}
+            // Initialize notification badge on page load
             fetchNotifications();
-            {% endif %}
 
             const alphabetNav = document.getElementById('alphabetNav');
             const cards = document.querySelectorAll('.video-card');
