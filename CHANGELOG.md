@@ -5,6 +5,7 @@ All notable changes to Piano Jazz Concept will be documented in this file.
 ## 2025-10-02
 
 ### UI/UX Improvements
+- Update notification bell to read hierarchical changelog format (fa13845)
 - Make notification bell visible to all users (2341bf9)
 - Disable auto-login for production (c59fdd8)
 - Add notification bell system for admin updates (19ce16e)
