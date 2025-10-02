@@ -67,11 +67,6 @@
             --color-5: 90deg 100% 63%;
         }
 
-        @keyframes rainbow {
-            0% { background-position: 0% }
-            100% { background-position: 200% }
-        }
-
         .btn {
             padding: 0.5rem 1rem;
             background: #fff;
@@ -104,31 +99,20 @@
             font-size: 1.1rem;
             font-weight: 600;
             color: #121213;
-            border: 2px solid transparent;
+            border: 2px solid #ddd;
             border-radius: 12px;
-            background: linear-gradient(#fff, #fff),
-                        linear-gradient(#fff 50%, rgba(255,255,255,0.6) 80%, rgba(0,0,0,0)),
-                        linear-gradient(90deg,
-                            hsl(var(--color-1)),
-                            hsl(var(--color-5)),
-                            hsl(var(--color-3)),
-                            hsl(var(--color-4)),
-                            hsl(var(--color-2))
-                        );
-            background-clip: padding-box, border-box, border-box;
-            background-origin: border-box;
-            background-size: 300%;
-            animation: rainbow 8s linear infinite;
+            background: #fff;
             transition: all 0.3s ease;
         }
 
         .btn-rainbow:hover {
             transform: translateY(-1px);
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            border-color: #999;
         }
 
         .btn-rainbow.active {
-            animation: rainbow 4s linear infinite;
+            border-color: #666;
             border-width: 2px;
             box-shadow: 0 2px 8px rgba(100, 100, 100, 0.15);
         }
@@ -591,21 +575,9 @@
             font-size: 0.85rem;
             font-weight: 600;
             color: #121213;
-            border: 2px solid transparent;
+            border: 2px solid #ddd;
             border-radius: 8px;
-            background: linear-gradient(#fff, #fff),
-                        linear-gradient(#fff 50%, rgba(255,255,255,0.6) 80%, rgba(0,0,0,0)),
-                        linear-gradient(90deg,
-                            hsl(var(--color-1)),
-                            hsl(var(--color-5)),
-                            hsl(var(--color-3)),
-                            hsl(var(--color-4)),
-                            hsl(var(--color-2))
-                        );
-            background-clip: padding-box, border-box, border-box;
-            background-origin: border-box;
-            background-size: 300%;
-            animation: rainbow 8s linear infinite;
+            background: #fff;
             cursor: pointer;
             display: inline-block;
             margin-right: 0.3rem;
@@ -615,12 +587,12 @@
         .reextract-btn:hover {
             transform: translateY(-1px);
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            border-color: #999;
         }
 
         .reextract-btn:disabled {
             opacity: 0.5;
             cursor: not-allowed;
-            animation: none;
         }
 
         .prompt-editor-section {
