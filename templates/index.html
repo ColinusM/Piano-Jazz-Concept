@@ -49,6 +49,17 @@
             background-repeat: no-repeat;
         }
 
+        .header-logo {
+            position: absolute;
+            top: 50%;
+            left: 2rem;
+            transform: translateY(-50%);
+            width: 300px;
+            height: auto;
+            z-index: 10;
+            opacity: 0.95;
+        }
+
         header h1 {
             display: none;
         }
@@ -874,6 +885,7 @@
     {% endif %}
 
     <header>
+        <img src="/static/images/logo.png" alt="Piano Jazz Concept Logo" class="header-logo">
         <h1>🎹 Piano Jazz Concept</h1>
         <p class="subtitle">Catalogue complet des analyses musicales</p>
     </header>
