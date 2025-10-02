@@ -632,7 +632,7 @@ def create_song():
 @app.route('/api/get_changelog', methods=['GET'])
 def get_changelog():
     try:
-        changelog_path = 'changelog.md'
+        changelog_path = 'CHANGELOG.md'
         if not os.path.exists(changelog_path):
             return jsonify({'success': True, 'updates': [], 'count': 0})
 
