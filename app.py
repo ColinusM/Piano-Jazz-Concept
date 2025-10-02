@@ -5,6 +5,7 @@ import sys
 import re
 import os
 import shutil
+from datetime import datetime
 from dotenv import load_dotenv
 sys.path.append('config')
 from admin_config import ADMIN_USERNAME, ADMIN_PASSWORD, AUTO_LOGIN, SECRET_KEY
@@ -625,6 +626,78 @@ def create_song():
         conn.close()
 
         return jsonify({'success': True, 'song_id': new_song_id})
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@app.route('/api/get_changelog', methods=['GET'])
+def get_changelog():
+    if not session.get('admin'):
+        return jsonify({'success': False, 'error': 'Unauthorized'}), 401
+
+    try:
+        changelog_path = 'CHANGELOG.md'
+        if not os.path.exists(changelog_path):
+            return jsonify({'success': True, 'updates': [], 'count': 0})
+
+        # Get last seen timestamp from session (default to 0 for first visit)
+        last_seen = session.get('changelog_last_seen', 0)
+
+        # Parse changelog file
+        updates = []
+        current_entry = None
+
+        with open(changelog_path, 'r', encoding='utf-8') as f:
+            for line in f:
+                line = line.strip()
+                # Match date headers like "## 2025-10-02 15:30"
+                if line.startswith('## ') and len(line) > 3:
+                    date_str = line[3:].strip()
+                    try:
+                        # Parse the timestamp
+                        entry_time = datetime.strptime(date_str, '%Y-%m-%d %H:%M').timestamp()
+
+                        # Save previous entry if exists
+                        if current_entry and current_entry['changes']:
+                            updates.append(current_entry)
+
+                        # Start new entry
+                        current_entry = {
+                            'date': date_str,
+                            'timestamp': entry_time,
+                            'changes': [],
+                            'is_new': entry_time > last_seen
+                        }
+                    except:
+                        pass
+                # Match bullet points like "- Added feature X"
+                elif line.startswith('- ') and current_entry:
+                    current_entry['changes'].append(line[2:])
+
+        # Add last entry
+        if current_entry and current_entry['changes']:
+            updates.append(current_entry)
+
+        # Count new updates
+        new_count = sum(1 for u in updates if u['is_new'])
+
+        return jsonify({
+            'success': True,
+            'updates': updates,
+            'count': new_count
+        })
+
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@app.route('/api/mark_changelog_seen', methods=['POST'])
+def mark_changelog_seen():
+    if not session.get('admin'):
+        return jsonify({'success': False, 'error': 'Unauthorized'}), 401
+
+    try:
+        # Store current timestamp as last seen
+        session['changelog_last_seen'] = datetime.now().timestamp()
+        return jsonify({'success': True})
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)}), 500
 
