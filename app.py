@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, session, jsonify
+from flask import Flask, render_template, request, session, jsonify, redirect
 import sqlite3
 import json
 import sys
@@ -134,8 +134,8 @@ def categorize_video(title, description):
 
 @app.route('/')
 def index():
-    # Auto-login for testing
-    if AUTO_LOGIN and 'admin' not in session:
+    # Auto-login for testing (but not if user explicitly logged out)
+    if AUTO_LOGIN and 'admin' not in session and 'logged_out' not in session:
         session['admin'] = True
 
     sort = request.args.get('sort', 'alpha')
@@ -436,17 +436,36 @@ def index():
                          is_admin=session.get('admin', False),
                          view=view)
 
+@app.route('/login')
+def login_page():
+    return render_template('login.html')
+
 @app.route('/api/login', methods=['POST'])
 def login():
     data = request.get_json()
     if data.get('username') == ADMIN_USERNAME and data.get('password') == ADMIN_PASSWORD:
         session['admin'] = True
+        session.pop('logged_out', None)  # Clear logout flag
+
+        # Handle "Remember Me" - make session permanent (lasts 30 days)
+        if data.get('remember'):
+            session.permanent = True
+        else:
+            session.permanent = False
+
         return jsonify({'success': True})
     return jsonify({'success': False}), 401
 
-@app.route('/api/logout', methods=['POST'])
+@app.route('/logout')
 def logout():
     session.pop('admin', None)
+    session['logged_out'] = True
+    return redirect('/')
+
+@app.route('/api/logout', methods=['POST'])
+def api_logout():
+    session.pop('admin', None)
+    session['logged_out'] = True
     return jsonify({'success': True})
 
 @app.route('/api/update_song', methods=['POST'])
