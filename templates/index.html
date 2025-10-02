@@ -907,22 +907,6 @@
         <p class="subtitle">Catalogue complet des analyses musicales</p>
     </header>
 
-    {% if is_admin %}
-    <div class="container">
-        <div class="prompt-editor-section collapsed" id="promptEditorSection">
-            <h2 onclick="togglePromptEditor()">
-                <span>⚙️ Master Prompt Editor</span>
-                <button class="minimize-btn" onclick="togglePromptEditor(); event.stopPropagation();" title="Minimize">−</button>
-            </h2>
-            <div class="prompt-editor-content">
-                <p style="color: #999; margin-bottom: 1rem;">Edit the master prompt template used for all extractions. Changes save to config/prompt_template.txt</p>
-                <textarea id="masterPromptTextarea" class="prompt-textarea" placeholder="Loading prompt..."></textarea>
-                <button class="save-prompt-btn" onclick="saveMasterPrompt()">💾 Save Master Prompt</button>
-            </div>
-        </div>
-    </div>
-    {% endif %}
-
     <div class="search-bar">
         <form class="search-container" method="get" action="/">
             <input type="hidden" name="sort" value="{{ sort }}">
@@ -1236,18 +1220,6 @@
                                 <option value="non-analysis" {% if video.video_type == 'non-analysis' %}selected{% endif %}>💬 Talk/Interview</option>
                             </select>
                         </div>
-                        <input type="text"
-                               class="prompt-guidance-input"
-                               id="guidance-{{ video.video_id }}"
-                               placeholder="e.g. search Louis Cole album title &quot;Message&quot;"
-                               title="Optional: Add specific instructions to guide the LLM extraction (e.g., 'focus on Brad Mehldau's solo', 'extract all chord changes', 'identify the specific album version')">
-                        <button class="reextract-btn" onclick="reextractVideo({{ video.video_id }}, this)" title="Re-run LLM extraction with current guidance to update song metadata">
-                            🤖 AI Analysis
-                        </button>
-                        <button class="reextract-btn" onclick="getTranscript('{{ video.url }}', {{ video.video_id }})" title="Fetch YouTube transcript (French/English) for additional context">
-                            📜 Get Transcript
-                        </button>
-                        <div id="transcript-{{ video.video_id }}" class="transcript-display" style="display: none; margin-top: 0.5rem; background: #f5f5f5; color: #333; padding: 1rem; border-radius: 4px; max-height: 300px; overflow-y: auto; font-size: 0.85rem; line-height: 1.6; white-space: pre-wrap;"></div>
                     </div>
                     {% endif %}
 
@@ -1352,11 +1324,6 @@
         }
 
         // Toggle prompt editor collapse
-        function togglePromptEditor() {
-            const section = document.getElementById('promptEditorSection');
-            section.classList.toggle('collapsed');
-        }
-
         // Undo stack to track changes
         let undoStack = [];
         let undoTimeout = null;
@@ -1609,31 +1576,6 @@
             }
         });
 
-        async function saveMasterPrompt() {
-            const promptText = document.getElementById('masterPromptTextarea').value;
-
-            try {
-                const response = await fetch('/api/save_master_prompt', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        prompt: promptText
-                    })
-                });
-
-                const result = await response.json();
-
-                if (result.success) {
-                    alert('✅ Master prompt saved successfully!');
-                } else {
-                    alert('❌ Error: ' + (result.error || 'Unknown error'));
-                }
-            } catch (error) {
-                alert('❌ Network error: ' + error.message);
-            }
-        }
         {% endif %}
 
         async function deleteSong(songId, btn) {
@@ -1715,86 +1657,6 @@
             } catch (error) {
                 console.error('Error updating video type:', error);
                 alert('Failed to update video type');
-            }
-        }
-
-        async function getTranscript(videoUrl, videoId) {
-            const transcriptDiv = document.getElementById('transcript-' + videoId);
-            if (!transcriptDiv) {
-                console.error('Transcript div not found for video ID:', videoId);
-                return;
-            }
-
-            // Clear previous content
-            transcriptDiv.textContent = '⏳ Fetching transcript...';
-            transcriptDiv.style.display = 'block';
-            transcriptDiv.style.color = '#4a9eff';
-
-            try {
-                const response = await fetch('/api/get_transcript', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        video_url: videoUrl
-                    })
-                });
-
-                const result = await response.json();
-
-                if (result.success) {
-                    transcriptDiv.textContent = result.transcript;
-                    transcriptDiv.style.color = '#e0e0e0';
-                } else {
-                    transcriptDiv.textContent = '❌ ' + (result.error || 'Unknown error');
-                    transcriptDiv.style.color = '#ff6b6b';
-                }
-            } catch (error) {
-                transcriptDiv.textContent = '❌ Network error: ' + error.message;
-                transcriptDiv.style.color = '#ff6b6b';
-            }
-        }
-
-        async function reextractVideo(videoId, button) {
-            const guidanceInput = document.getElementById('guidance-' + videoId);
-            const guidance = guidanceInput ? guidanceInput.value.trim() : '';
-
-            if (!confirm('Re-extract metadata for this video? This will replace all current data.')) {
-                return;
-            }
-
-            const originalText = button.textContent;
-            button.disabled = true;
-            button.textContent = '⏳ Extracting...';
-
-            try {
-                const response = await fetch('/api/reextract_video', {
-                    method: 'POST',
-                    headers:
-{
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        video_id: videoId,
-                        guidance: guidance
-                    })
-                });
-
-                const result = await response.json();
-
-                if (result.success) {
-                    alert(`✅ Success! Extracted ${result.songs_extracted} song(s). Refreshing page...`);
-                    location.reload();
-                } else {
-                    alert('❌ Error: ' + (result.error || 'Unknown error'));
-                    button.disabled = false;
-                    button.textContent = originalText;
-                }
-            } catch (error) {
-                alert('❌ Network error: ' + error.message);
-                button.disabled = false;
-                button.textContent = originalText;
             }
         }
 
