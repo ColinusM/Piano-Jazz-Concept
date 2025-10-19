@@ -34,12 +34,19 @@ CRITICAL CONTEXT:
 - If analyzing a specific song/artist clearly → extract that song
 - If comparing multiple artists' versions → create SEPARATE entries for each
 
-IMPORTANT - BE CONSERVATIVE:
-- ONLY extract songs that are CLEARLY mentioned in title or description
-- If video is theory/discussion with NO SPECIFIC SONGS → return empty array []
-- DO NOT make up songs or use generic examples
-- DO NOT default to any particular song if unclear
-- If unsure → return empty array []
+IMPORTANT - WHEN TO EXTRACT:
+✓ ALWAYS extract when title format is "Song Title (Composer)" or "Song Title | Artist"
+✓ ALWAYS extract when specific song/piece names are in title/description
+✓ Extract TV themes, film scores, video game music with clear titles
+✗ DO NOT extract for pure theory videos with no specific piece mentioned
+✗ DO NOT extract for generic discussions without named compositions
+✗ DO NOT make up songs or use generic placeholder examples
+
+Examples:
+- "Chapeau melon et bottes de cuir | The Avengers (Laurie Johnson)" → EXTRACT (clear TV theme + composer)
+- "Giant Steps avec Brad Mehldau" → EXTRACT (specific song + artist)
+- "Les gammes diminuées" → DO NOT EXTRACT (theory topic, no specific piece)
+- "Comment improviser sur un II-V-I" → DO NOT EXTRACT (technique video, no song)
 
 YOUR TASK:
 Extract ALL songs/pieces analyzed in this video with MAXIMUM metadata.
