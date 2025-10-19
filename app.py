@@ -105,6 +105,7 @@ def get_songs():
             COALESCE(s.category, v.category) as category
         FROM songs s
         LEFT JOIN videos v ON s.video_id = v.id
+        WHERE (s.deleted IS NULL OR s.deleted = 0)
         ORDER BY s.song_title ASC
     ''')
     songs = cursor.fetchall()
@@ -477,11 +478,14 @@ def update_song():
         return jsonify({'success': False, 'error': 'Invalid field'}), 400
 
     try:
+        print(f"[UPDATE] Updating song {song_id}: {field} = '{value}'")
         conn = sqlite3.connect(DATABASE_PATH, timeout=10.0)
         cursor = conn.cursor()
         cursor.execute(f'UPDATE songs SET {field} = ? WHERE id = ?', (value, song_id))
+        rows_affected = cursor.rowcount
         conn.commit()
         conn.close()
+        print(f"[UPDATE] Success! {rows_affected} row(s) updated")
         return jsonify({'success': True})
     except sqlite3.OperationalError as e:
         if 'locked' in str(e):
