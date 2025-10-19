@@ -884,21 +884,9 @@ def auto_update():
 
 def extract_video_data_for_auto_update(video_title, video_description, video_url, prompt_guidance=''):
     """
-    Extract video data using LLM - uses master prompt template
+    Extract video data using LLM - uses same prompt as llm_full_extract.py
     """
-    # Load master prompt template
-    try:
-        with open('config/prompt_template.txt', 'r') as f:
-            prompt_template = f.read()
-    except FileNotFoundError:
-        # Load from llm_full_extract.py if template doesn't exist
-        with open('utils/llm_full_extract.py', 'r') as f:
-            llm_script = f.read()
-            start = llm_script.find('prompt = f"""') + 13
-            end = llm_script.find('"""', start)
-            prompt_template = llm_script[start:end]
-
-    # Build the prompt with video data
+    # Use the exact same prompt as llm_full_extract.py
     prompt = f"""You are analyzing a Piano Jazz Concept YouTube video to catalog which songs/pieces have been analyzed.
 
 VIDEO TITLE: {video_title}
@@ -906,7 +894,86 @@ VIDEO URL: {video_url}
 FULL DESCRIPTION:
 {video_description}
 
-{prompt_template}"""
+CRITICAL CONTEXT:
+- Piano Jazz Concept is Étienne Guéreau's educational jazz channel
+- NEVER list Étienne as "performer" - he's the analyst/demonstrator, NOT the artist to catalog
+- Focus on WHICH ARTISTS' RECORDINGS are being analyzed/discussed
+- If title says "avec Brad Mehldau" → Brad is the featured performer
+- If analyzing a specific song/artist clearly → extract that song
+- If comparing multiple artists' versions → create SEPARATE entries for each
+
+IMPORTANT - BE CONSERVATIVE:
+- ONLY extract songs that are CLEARLY mentioned in title or description
+- If video is theory/discussion with NO SPECIFIC SONGS → return empty array []
+- DO NOT make up songs or use generic examples
+- DO NOT default to any particular song if unclear
+- If unsure → return empty array []
+
+YOUR TASK:
+Extract ALL songs/pieces analyzed in this video with MAXIMUM metadata.
+
+Use THREE sources:
+1. Video title/description to identify songs and artists
+2. Your training data to fill gaps and add context
+3. Your knowledge of jazz history, famous recordings, albums, etc.
+
+EXTRACT EVERYTHING (but only if songs are clearly present):
+- Song title (MUST be explicitly mentioned in title/description)
+- Composer(s)
+- Performer/Artist (whose recording/version is being analyzed - NEVER Étienne)
+  - From title: "avec Brad Mehldau" → Brad Mehldau
+  - From description: "analyse du solo de Coltrane" → John Coltrane
+  - If song mentioned but no performer → use your knowledge to identify famous version
+  - If no specific recording mentioned → leave null
+- Original artist (if it's a cover/arrangement)
+- Album name (if mentioned OR if you know which famous album)
+- Record label (if you know it)
+- Recording year (if mentioned OR if you know the famous recording year)
+- Composition year
+- Style/genre
+- Era/decade
+- Featured artists (all artists mentioned in title/description)
+- Context notes (analyzing specific recording? comparing versions? theory video?)
+- Timestamp (if provided)
+
+MULTIPLE VERSIONS:
+If video compares/analyzes multiple artists' versions, create SEPARATE entries
+
+NO LIMITATIONS:
+Add as much information as you can from your training data. If you know the song:
+- Famous recordings and their details
+- Historical context
+- Notable musicians
+- Anything valuable for cataloging
+
+Return JSON array:
+- If songs found: return array with song objects
+- If NO songs mentioned/analyzed: return empty array []
+- Even if single song, return array with 1 item
+
+Example response:
+[
+  {{
+    "song_title": "song name",
+    "composer": "who wrote it",
+    "performer": "whose recording is analyzed (NEVER Étienne)",
+    "original_artist": "if it's a cover",
+    "album": "album name if known",
+    "record_label": "label if known",
+    "recording_year": year or null,
+    "composition_year": year or null,
+    "style": "genre/style",
+    "era": "decade/era",
+    "featured_artists": ["artist1", "artist2"],
+    "timestamp": "MM:SS or null",
+    "context_notes": "context about this analysis",
+    "additional_info": "anything else valuable"
+  }}
+]
+
+Or if no songs: []
+
+Be comprehensive BUT conservative! Only extract what's actually there."""
 
     if prompt_guidance:
         prompt += f"\n\nADDITIONAL GUIDANCE:\n{prompt_guidance}"
