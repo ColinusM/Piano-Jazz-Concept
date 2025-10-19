@@ -5,7 +5,20 @@ All notable changes to Piano Jazz Concept will be documented in this file.
 ## 2025-10-19
 
 ### Feature Additions
+- Add brain button (🧠) for per-video song extraction in admin mode (99884f6)
 - Add auto-update button to refresh catalog with latest YouTube videos (445975d)
+- Auto-update now re-extracts songs for videos with 0 songs (e46b9e7)
+
+### Bug Fixes
+- Fix deleted songs appearing after refresh (f3f6eb4)
+- Fix OpenAI API key newline issue on Render causing API call failures (b12cfc8)
+- Fix auto-update LLM extraction prompt on Render (1b133dc)
+
+### Improvements
+- Clarify LLM extraction: title IS the song when formatted with composer/artist (1f37476)
+- Improve LLM extraction to handle TV themes and clear song titles (959a1fa)
+- Add update logging to track song edits (f3f6eb4)
+- Add API key verification logging at startup (99884f6)
 
 ### UI/UX Improvements
 - Remove duplicate YouTube button and make thumbnail link to YouTube (2cfbdef)
