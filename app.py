@@ -61,6 +61,8 @@ ensure_category_columns()
 # OpenAI client for re-extraction
 openai_api_key = os.getenv('OPENAI_API_KEY')
 if openai_api_key:
+    # Strip any whitespace/newlines from API key (common issue when copy-pasting)
+    openai_api_key = openai_api_key.strip().replace('\n', '').replace('\r', '').replace(' ', '')
     print(f"[STARTUP] OpenAI API key loaded: {openai_api_key[:7]}...{openai_api_key[-4:]}")
 else:
     print("[STARTUP] WARNING: OPENAI_API_KEY not found in environment!")
@@ -1127,6 +1129,15 @@ Be comprehensive BUT conservative! Only extract what's actually there."""
         error_type = type(e).__name__
         error_msg = str(e)
         print(f"[AUTO-UPDATE] Error extracting video data ({error_type}): {error_msg}", file=sys.stderr)
+
+        # Check if it's an OpenAI API error
+        if hasattr(e, 'response'):
+            print(f"[AUTO-UPDATE] API Response: {e.response}", file=sys.stderr)
+        if hasattr(e, 'status_code'):
+            print(f"[AUTO-UPDATE] Status Code: {e.status_code}", file=sys.stderr)
+        if hasattr(e, 'body'):
+            print(f"[AUTO-UPDATE] Response Body: {e.body}", file=sys.stderr)
+
         print(f"[AUTO-UPDATE] Full traceback:", file=sys.stderr)
         traceback.print_exc(file=sys.stderr)
         return []
