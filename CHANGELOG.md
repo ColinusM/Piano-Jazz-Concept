@@ -2,6 +2,14 @@
 
 All notable changes to Piano Jazz Concept will be documented in this file.
 
+## 2025-10-19
+
+### Feature Additions
+- Add auto-update button to refresh catalog with latest YouTube videos (445975d)
+
+### UI/UX Improvements
+- Remove duplicate YouTube button and make thumbnail link to YouTube (2cfbdef)
+
 ## 2025-10-02
 
 ### Bug Fixes
