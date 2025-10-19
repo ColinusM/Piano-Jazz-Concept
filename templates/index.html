@@ -773,6 +773,36 @@
             color: #fff;
         }
 
+        .enrich-btn {
+            position: absolute;
+            top: 0.75rem;
+            right: 5.5rem;
+            background: #f5f5f5;
+            color: #999;
+            border: none;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+            z-index: 10;
+        }
+
+        .enrich-btn:hover {
+            background: #9C27B0;
+            color: #fff;
+        }
+
+        .enrich-btn:disabled {
+            background: #ddd;
+            cursor: not-allowed;
+            opacity: 0.5;
+        }
+
         .song-title-input {
             background: #fff;
             color: #333;
@@ -1179,6 +1209,7 @@
                     {% endif %}
                     {% if view == 'videos' %}
                     <button class="add-song-btn" onclick="showSongInput({{ video.video_id }}, this)" title="Add new song">+</button>
+                    <button class="enrich-btn" onclick="enrichVideo({{ video.video_id }}, this)" title="Extract songs with AI">🧠</button>
                     {% endif %}
                 {% endif %}
                 {% if video.thumbnail_url %}
@@ -1844,10 +1875,13 @@
         {% if is_admin %}
         document.addEventListener('DOMContentLoaded', async () => {
             try {
-                const response = await fetch('/api/get_master_prompt');
-                const result = await response.json();
-                if (result.success) {
-                    document.getElementById('masterPromptTextarea').value = result.prompt;
+                const textarea = document.getElementById('masterPromptTextarea');
+                if (textarea) {
+                    const response = await fetch('/api/get_master_prompt');
+                    const result = await response.json();
+                    if (result.success) {
+                        textarea.value = result.prompt;
+                    }
                 }
             } catch (error) {
                 console.error('Failed to load master prompt:', error);
@@ -1895,6 +1929,42 @@
             } catch (error) {
                 console.error('Error deleting song:', error);
                 alert('Failed to delete song');
+            }
+        }
+
+        async function enrichVideo(videoId, button) {
+            if (button.disabled) return;
+
+            if (!confirm('Extract songs from this video using AI? This will delete existing songs and create new ones.')) {
+                return;
+            }
+
+            button.disabled = true;
+            const originalText = button.innerHTML;
+            button.innerHTML = '⏳';
+
+            try {
+                const response = await fetch('/api/enrich_video', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ video_id: videoId })
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    alert(`✓ Extracted ${result.songs_count} song(s)`);
+                    location.reload();
+                } else {
+                    alert('Failed to extract songs: ' + (result.error || 'Unknown error'));
+                    button.disabled = false;
+                    button.innerHTML = originalText;
+                }
+            } catch (error) {
+                console.error('Error enriching video:', error);
+                alert('Failed to extract songs');
+                button.disabled = false;
+                button.innerHTML = originalText;
             }
         }
 

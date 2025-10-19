@@ -59,8 +59,13 @@ def ensure_category_columns():
 ensure_category_columns()
 
 # OpenAI client for re-extraction
+openai_api_key = os.getenv('OPENAI_API_KEY')
+if openai_api_key:
+    print(f"[STARTUP] OpenAI API key loaded: {openai_api_key[:7]}...{openai_api_key[-4:]}")
+else:
+    print("[STARTUP] WARNING: OPENAI_API_KEY not found in environment!")
 openai_client = OpenAI(
-    api_key=os.getenv('OPENAI_API_KEY')
+    api_key=openai_api_key
 )
 
 def get_songs():
@@ -580,6 +585,89 @@ def restore_song():
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)}), 500
 
+@app.route('/api/enrich_video', methods=['POST'])
+def enrich_video():
+    """Extract songs from a video using LLM"""
+    if not session.get('admin'):
+        return jsonify({'success': False, 'error': 'Unauthorized'}), 401
+
+    data = request.get_json()
+    video_id = data.get('video_id')
+
+    if not video_id:
+        return jsonify({'success': False, 'error': 'Missing video_id'}), 400
+
+    try:
+        conn = sqlite3.connect(DATABASE_PATH, timeout=10.0)
+        cursor = conn.cursor()
+
+        # Get video details
+        cursor.execute('''
+            SELECT title, description, url
+            FROM videos
+            WHERE id = ?
+        ''', (video_id,))
+
+        video = cursor.fetchone()
+        if not video:
+            conn.close()
+            return jsonify({'success': False, 'error': 'Video not found'}), 404
+
+        video_title, video_description, video_url = video
+
+        # Extract songs using LLM
+        print(f"[ENRICH] Extracting songs from: {video_title}")
+        songs = extract_video_data_for_auto_update(video_title, video_description, video_url)
+
+        # Delete existing songs for this video
+        cursor.execute('DELETE FROM songs WHERE video_id = ?', (video_id,))
+
+        # Insert new songs
+        for song in songs:
+            cursor.execute('''
+                INSERT INTO songs (
+                    video_id, song_title, composer, performer, original_artist,
+                    album, record_label, recording_year, composition_year,
+                    style, era, featured_artists, context_notes, timestamp,
+                    part_number, total_parts, video_title, video_url,
+                    video_description, published_at
+                )
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ''', (
+                video_id,
+                song.get('song_title'),
+                song.get('composer'),
+                song.get('performer'),
+                song.get('original_artist'),
+                song.get('album'),
+                song.get('record_label'),
+                song.get('recording_year'),
+                song.get('composition_year'),
+                song.get('style'),
+                song.get('era'),
+                ', '.join(song.get('featured_artists', [])) if song.get('featured_artists') else None,
+                song.get('context_notes'),
+                song.get('timestamp'),
+                song.get('part_number', 1),
+                song.get('total_parts', 1),
+                video_title,
+                video_url,
+                video_description,
+                None  # published_at - not available in this context
+            ))
+
+        conn.commit()
+        conn.close()
+
+        print(f"[ENRICH] Extracted {len(songs)} song(s)")
+        return jsonify({'success': True, 'songs_count': len(songs)})
+
+    except Exception as e:
+        print(f"[ENRICH] Error: {e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({'success': False, 'error': str(e)}), 500
+
 @app.route('/api/create_song', methods=['POST'])
 def create_song():
     if not session.get('admin'):
@@ -1016,7 +1104,8 @@ Be comprehensive BUT conservative! Only extract what's actually there."""
                 {"role": "user", "content": prompt}
             ],
             temperature=0,
-            max_tokens=2000
+            max_tokens=2000,
+            timeout=60.0  # 60 second timeout for Render
         )
 
         response_content = response.choices[0].message.content
@@ -1033,9 +1122,13 @@ Be comprehensive BUT conservative! Only extract what's actually there."""
         return songs
 
     except Exception as e:
-        print(f"[AUTO-UPDATE] Error extracting video data: {e}")
         import traceback
-        traceback.print_exc()
+        import sys
+        error_type = type(e).__name__
+        error_msg = str(e)
+        print(f"[AUTO-UPDATE] Error extracting video data ({error_type}): {error_msg}", file=sys.stderr)
+        print(f"[AUTO-UPDATE] Full traceback:", file=sys.stderr)
+        traceback.print_exc(file=sys.stderr)
         return []
 
 if __name__ == '__main__':
