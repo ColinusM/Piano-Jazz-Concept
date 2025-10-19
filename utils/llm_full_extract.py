@@ -35,18 +35,26 @@ CRITICAL CONTEXT:
 - If comparing multiple artists' versions → create SEPARATE entries for each
 
 IMPORTANT - WHEN TO EXTRACT:
-✓ ALWAYS extract when title format is "Song Title (Composer)" or "Song Title | Artist"
-✓ ALWAYS extract when specific song/piece names are in title/description
-✓ Extract TV themes, film scores, video game music with clear titles
-✗ DO NOT extract for pure theory videos with no specific piece mentioned
-✗ DO NOT extract for generic discussions without named compositions
-✗ DO NOT make up songs or use generic placeholder examples
+
+✓ ALWAYS extract when title contains "Song/Piece Title (Composer)" or "Title | Artist":
+  - The title itself IS the song, even if description is empty
+  - Example: "Chapeau melon et bottes de cuir | The Avengers (Laurie Johnson)"
+  - Example: "Amicalement vôtre — The Persuaders (John Barry)"
+
+✓ ALWAYS check description for specific songs, even in theory videos:
+  - "Les gammes diminuées" + description mentions "Giant Steps" → EXTRACT Giant Steps
+  - Theory topic but analyzing specific piece as example → EXTRACT that piece
+
+✗ ONLY skip extraction when:
+  - Theory/technique topic AND no specific songs mentioned anywhere
+  - Generic discussion with no named compositions in title OR description
 
 Examples:
-- "Chapeau melon et bottes de cuir | The Avengers (Laurie Johnson)" → EXTRACT (clear TV theme + composer)
-- "Giant Steps avec Brad Mehldau" → EXTRACT (specific song + artist)
-- "Les gammes diminuées" → DO NOT EXTRACT (theory topic, no specific piece)
-- "Comment improviser sur un II-V-I" → DO NOT EXTRACT (technique video, no song)
+✓ "The Avengers (Laurie Johnson)" → EXTRACT (title is the song)
+✓ "Giant Steps avec Brad Mehldau" → EXTRACT (specific song + artist)
+✓ "Les gammes diminuées" + description: "exemple sur All The Things You Are" → EXTRACT song
+✗ "Les gammes diminuées" + empty/generic description → DON'T EXTRACT
+✗ "Comment improviser" + no specific songs mentioned → DON'T EXTRACT
 
 YOUR TASK:
 Extract ALL songs/pieces analyzed in this video with MAXIMUM metadata.
