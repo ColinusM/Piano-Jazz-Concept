@@ -200,6 +200,8 @@
             height: 200px;
             cursor: pointer;
             overflow: hidden;
+            display: block;
+            text-decoration: none;
         }
 
         .video-thumbnail {
@@ -230,36 +232,6 @@
         .thumbnail-container:hover .play-button-overlay {
             background: rgba(255, 0, 0, 0.8);
             transform: translate(-50%, -50%) scale(1.1);
-        }
-
-        .video-player {
-            width: 100%;
-            height: 200px;
-        }
-
-        .youtube-btn {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background: #FF0000;
-            color: white;
-            text-decoration: none;
-            width: 60px;
-            height: 42px;
-            border-radius: 8px;
-            transition: opacity 0.2s ease;
-            margin: 0.5rem auto;
-            padding: 6px 10px;
-        }
-
-        .youtube-btn:hover {
-            opacity: 0.8;
-        }
-
-        .youtube-btn-icon {
-            height: 100%;
-            width: 100%;
-            object-fit: contain;
         }
 
         .save-notification {
@@ -1210,12 +1182,9 @@
                     {% endif %}
                 {% endif %}
                 {% if video.thumbnail_url %}
-                <div class="thumbnail-container" data-video-id="{{ video.video_id }}" data-timestamp="{{ video.timestamp or '' }}">
-                    <img src="{{ video.thumbnail_url }}" alt="{{ video.title }}" class="video-thumbnail" onclick="loadVideo(this.parentElement)">
+                <a href="{{ video.url }}" target="_blank" class="thumbnail-container">
+                    <img src="{{ video.thumbnail_url }}" alt="{{ video.title }}" class="video-thumbnail">
                     <div class="play-button-overlay">▶</div>
-                </div>
-                <a href="{{ video.url }}" target="_blank" class="youtube-btn">
-                    <img src="/static/images/youtube-icon.png" alt="YouTube" class="youtube-btn-icon">
                 </a>
                 {% endif %}
                 <div class="video-content">
@@ -1774,26 +1743,6 @@
                 desc.classList.add('truncated');
                 btn.textContent = 'Lire la suite';
             }
-        }
-
-        function loadVideo(container) {
-            const videoId = container.dataset.videoId;
-            const timestamp = container.dataset.timestamp;
-
-            let embedUrl = `https://www.youtube.com/embed/${videoId}?autoplay=1`;
-            if (timestamp) {
-                embedUrl += `&start=${timestamp}`;
-            }
-
-            const iframe = document.createElement('iframe');
-            iframe.className = 'video-player';
-            iframe.src = embedUrl;
-            iframe.frameBorder = '0';
-            iframe.allow = 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture';
-            iframe.allowFullscreen = true;
-
-            container.innerHTML = '';
-            container.appendChild(iframe);
         }
 
         function editField(editIcon) {
