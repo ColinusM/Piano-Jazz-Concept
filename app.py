@@ -756,6 +756,8 @@ def auto_update():
 
         # Fetch latest videos (first page only - 50 videos)
         new_videos = []
+        videos_to_extract = []  # Videos needing song extraction (new or with 0 songs)
+
         params = {
             'key': youtube_api_key,
             'channelId': channel_id,
@@ -800,22 +802,49 @@ def auto_update():
                     VALUES (?, ?, ?, ?, ?, ?)
                 ''', (video_id, title, description, url, published_at, thumbnail_url))
 
+                db_video_id = cursor.lastrowid
+
                 if is_new:
                     new_videos.append({
-                        'id': cursor.lastrowid,
+                        'id': db_video_id,
                         'video_id': video_id,
                         'title': title,
                         'description': description,
                         'url': url
                     })
+                    videos_to_extract.append({
+                        'id': db_video_id,
+                        'video_id': video_id,
+                        'title': title,
+                        'description': description,
+                        'url': url
+                    })
+                else:
+                    # Check if existing video has 0 songs
+                    cursor.execute('SELECT id FROM videos WHERE video_id = ?', (video_id,))
+                    db_row = cursor.fetchone()
+                    if db_row:
+                        db_video_id = db_row[0]
+                        cursor.execute('SELECT COUNT(*) FROM songs WHERE video_id = ?', (db_video_id,))
+                        song_count = cursor.fetchone()[0]
+
+                        if song_count == 0:
+                            print(f"[AUTO-UPDATE] Video has 0 songs, will re-extract: {title}")
+                            videos_to_extract.append({
+                                'id': db_video_id,
+                                'video_id': video_id,
+                                'title': title,
+                                'description': description,
+                                'url': url
+                            })
 
         conn.commit()
 
-        # STEP 2: Extract songs from new videos using LLM
+        # STEP 2: Extract songs from videos needing extraction (new or with 0 songs)
         new_songs_count = 0
 
-        if new_videos:
-            for video in new_videos:
+        if videos_to_extract:
+            for video in videos_to_extract:
                 # Use the same extraction logic from llm_full_extract.py
                 songs = extract_video_data_for_auto_update(
                     video['title'],
