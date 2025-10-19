@@ -5,6 +5,8 @@ import sys
 import re
 import os
 import shutil
+import requests
+import html
 from datetime import datetime
 from dotenv import load_dotenv
 sys.path.append('config')
@@ -706,6 +708,239 @@ def mark_changelog_seen():
         return jsonify({'success': True})
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)}), 500
+
+@app.route('/api/auto_update', methods=['POST'])
+def auto_update():
+    """
+    Auto-update endpoint that:
+    1. Scrapes YouTube for latest videos
+    2. Extracts songs from new videos using LLM
+    """
+    try:
+        # Get API keys from environment
+        youtube_api_key = os.getenv('YOUTUBE_API_KEY')
+        openai_api_key = os.getenv('OPENAI_API_KEY')
+
+        if not youtube_api_key or not openai_api_key:
+            return jsonify({
+                'success': False,
+                'error': 'API keys not configured'
+            }), 500
+
+        conn = sqlite3.connect(DATABASE_PATH)
+        cursor = conn.cursor()
+
+        # STEP 1: Scrape YouTube for videos
+        channel_handle = 'Pianojazzconcept'
+
+        # Get channel ID
+        search = requests.get('https://www.googleapis.com/youtube/v3/search', params={
+            'key': youtube_api_key,
+            'q': channel_handle,
+            'type': 'channel',
+            'part': 'snippet'
+        }).json()
+
+        if 'items' not in search or len(search['items']) == 0:
+            conn.close()
+            return jsonify({
+                'success': False,
+                'error': 'Channel not found'
+            }), 404
+
+        channel_id = search['items'][0]['id']['channelId']
+
+        # Get existing video IDs to detect new videos
+        cursor.execute('SELECT video_id FROM videos')
+        existing_video_ids = set(row[0] for row in cursor.fetchall())
+
+        # Fetch latest videos (first page only - 50 videos)
+        new_videos = []
+        params = {
+            'key': youtube_api_key,
+            'channelId': channel_id,
+            'part': 'snippet',
+            'type': 'video',
+            'maxResults': 50,
+            'order': 'date'
+        }
+
+        response = requests.get('https://www.googleapis.com/youtube/v3/search', params=params).json()
+
+        # Collect video IDs
+        video_ids = [item['id']['videoId'] for item in response.get('items', [])]
+
+        # Fetch full details including complete descriptions
+        if video_ids:
+            details_response = requests.get('https://www.googleapis.com/youtube/v3/videos', params={
+                'key': youtube_api_key,
+                'id': ','.join(video_ids),
+                'part': 'snippet'
+            }).json()
+
+            for item in details_response.get('items', []):
+                video_id = item['id']
+                title = html.unescape(item['snippet']['title'])
+                description = html.unescape(item['snippet']['description'])
+                url = f"https://youtube.com/watch?v={video_id}"
+                published_at = item['snippet']['publishedAt']
+
+                # Get highest quality thumbnail available
+                thumbnails = item['snippet']['thumbnails']
+                thumbnail_url = (thumbnails.get('maxres') or
+                               thumbnails.get('high') or
+                               thumbnails.get('medium') or
+                               thumbnails.get('default'))['url']
+
+                # Check if this is a new video
+                is_new = video_id not in existing_video_ids
+
+                cursor.execute('''
+                    INSERT OR REPLACE INTO videos (video_id, title, description, url, published_at, thumbnail_url)
+                    VALUES (?, ?, ?, ?, ?, ?)
+                ''', (video_id, title, description, url, published_at, thumbnail_url))
+
+                if is_new:
+                    new_videos.append({
+                        'id': cursor.lastrowid,
+                        'video_id': video_id,
+                        'title': title,
+                        'description': description,
+                        'url': url
+                    })
+
+        conn.commit()
+
+        # STEP 2: Extract songs from new videos using LLM
+        new_songs_count = 0
+
+        if new_videos:
+            for video in new_videos:
+                # Use the same extraction logic from llm_full_extract.py
+                songs = extract_video_data_for_auto_update(
+                    video['title'],
+                    video['description'] or '',
+                    video['url']
+                )
+
+                if songs:
+                    for song_idx, song in enumerate(songs, 1):
+                        # Convert featured_artists list to JSON string
+                        featured_artists = song.get('featured_artists')
+                        if isinstance(featured_artists, list):
+                            featured_artists = json.dumps(featured_artists)
+
+                        cursor.execute('''
+                            INSERT INTO songs (
+                                video_id, song_title, composer, performer,
+                                original_artist, timestamp, composition_year,
+                                style, era, additional_info,
+                                part_number, total_parts,
+                                album, record_label, recording_year,
+                                featured_artists, context_notes,
+                                video_title, video_url, video_description, published_at
+                            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                        ''', (
+                            video['id'],
+                            song.get('song_title', video['title']),
+                            song.get('composer'),
+                            song.get('performer'),
+                            song.get('original_artist'),
+                            song.get('timestamp'),
+                            song.get('composition_year'),
+                            song.get('style'),
+                            song.get('era'),
+                            song.get('additional_info'),
+                            song_idx,
+                            len(songs),
+                            song.get('album'),
+                            song.get('record_label'),
+                            song.get('recording_year'),
+                            featured_artists,
+                            song.get('context_notes'),
+                            video['title'],
+                            video['url'],
+                            video['description'],
+                            None
+                        ))
+
+                    new_songs_count += len(songs)
+
+        conn.commit()
+        conn.close()
+
+        return jsonify({
+            'success': True,
+            'new_videos': len(new_videos),
+            'new_songs': new_songs_count,
+            'message': f'Found {len(new_videos)} new video(s), extracted {new_songs_count} song(s)'
+        })
+
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+def extract_video_data_for_auto_update(video_title, video_description, video_url, prompt_guidance=''):
+    """
+    Extract video data using LLM - uses master prompt template
+    """
+    # Load master prompt template
+    try:
+        with open('config/prompt_template.txt', 'r') as f:
+            prompt_template = f.read()
+    except FileNotFoundError:
+        # Load from llm_full_extract.py if template doesn't exist
+        with open('utils/llm_full_extract.py', 'r') as f:
+            llm_script = f.read()
+            start = llm_script.find('prompt = f"""') + 13
+            end = llm_script.find('"""', start)
+            prompt_template = llm_script[start:end]
+
+    # Build the prompt with video data
+    prompt = f"""You are analyzing a Piano Jazz Concept YouTube video to catalog which songs/pieces have been analyzed.
+
+VIDEO TITLE: {video_title}
+VIDEO URL: {video_url}
+FULL DESCRIPTION:
+{video_description}
+
+{prompt_template}"""
+
+    if prompt_guidance:
+        prompt += f"\n\nADDITIONAL GUIDANCE:\n{prompt_guidance}"
+
+    try:
+        print(f"[AUTO-UPDATE] Extracting songs from: {video_title}")
+        response = openai_client.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=[
+                {"role": "system", "content": "You are a music metadata extraction expert specializing in jazz. Return only valid JSON arrays. Use your full training knowledge to add comprehensive metadata."},
+                {"role": "user", "content": prompt}
+            ],
+            temperature=0,
+            max_tokens=2000
+        )
+
+        response_content = response.choices[0].message.content
+        print(f"[AUTO-UPDATE] LLM Response: {response_content[:200]}...")
+
+        # Strip markdown code blocks if present
+        if response_content.startswith('```'):
+            lines = response_content.split('\n')
+            response_content = '\n'.join(lines[1:-1])
+
+        result = json.loads(response_content)
+        songs = result if isinstance(result, list) else [result]
+        print(f"[AUTO-UPDATE] Extracted {len(songs)} song(s)")
+        return songs
+
+    except Exception as e:
+        print(f"[AUTO-UPDATE] Error extracting video data: {e}")
+        import traceback
+        traceback.print_exc()
+        return []
 
 if __name__ == '__main__':
     import os
