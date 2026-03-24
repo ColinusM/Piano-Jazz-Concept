@@ -195,8 +195,8 @@ def index():
                              songs=processed,
                              is_admin=session.get('admin', False))
 
-    # If view=videos or no songs, show videos instead for re-extraction
-    if (view == 'videos' or not songs) and session.get('admin'):
+    # If view=videos, show videos (available to all users)
+    if view == 'videos' or (not songs and session.get('admin')):
         conn = sqlite3.connect(DATABASE_PATH)
         conn.row_factory = sqlite3.Row
         cursor = conn.cursor()
