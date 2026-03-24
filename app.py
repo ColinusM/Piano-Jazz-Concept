@@ -154,6 +154,7 @@ def index():
     style_filter = request.args.get('style', 'all')
     era_filter = request.args.get('era', 'all')
     view = request.args.get('view', 'songs')
+    sort = request.args.get('sort', 'date')  # 'date' (newest first) or 'alpha' (A-Z)
 
     songs = get_songs()
 
@@ -200,7 +201,8 @@ def index():
         conn = sqlite3.connect(DATABASE_PATH)
         conn.row_factory = sqlite3.Row
         cursor = conn.cursor()
-        cursor.execute('SELECT id, title, description, url, published_at, thumbnail_url, video_type, category FROM videos ORDER BY title ASC')
+        video_order = 'published_at DESC' if sort == 'date' else 'title ASC'
+        cursor.execute(f'SELECT id, title, description, url, published_at, thumbnail_url, video_type, category FROM videos ORDER BY {video_order}')
         videos = cursor.fetchall()
 
         video_list = []
@@ -294,7 +296,8 @@ def index():
                              styles=[],
                              eras=[],
                              is_admin=session.get('admin', False),
-                             view=view)
+                             view=view,
+                             sort=sort)
 
     # Process songs
     processed = []
@@ -387,8 +390,11 @@ def index():
     if era_filter != 'all':
         processed = [s for s in processed if s['era'] and era_filter.lower() in s['era'].lower()]
 
-    # Default sort: alphabetical by title
-    processed.sort(key=lambda x: x['title'].lower())
+    # Sort
+    if sort == 'alpha':
+        processed.sort(key=lambda x: x['title'].lower())
+    else:  # date (default) - newest first
+        processed.sort(key=lambda x: x.get('published_at') or '', reverse=True)
 
     # Get all unique values for filter dropdowns (from ALL songs, not just filtered)
     all_songs = get_songs()
@@ -423,7 +429,8 @@ def index():
                          styles=all_styles,
                          eras=all_eras,
                          is_admin=session.get('admin', False),
-                         view=view)
+                         view=view,
+                         sort=sort)
 
 @app.route('/login')
 def login_page():
