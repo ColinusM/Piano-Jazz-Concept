@@ -66,9 +66,7 @@ if openai_api_key:
     print(f"[STARTUP] OpenAI API key loaded: {openai_api_key[:7]}...{openai_api_key[-4:]}")
 else:
     print("[STARTUP] WARNING: OPENAI_API_KEY not found in environment!")
-openai_client = OpenAI(
-    api_key=openai_api_key
-)
+openai_client = OpenAI(api_key=openai_api_key) if openai_api_key else None
 
 def get_songs():
     conn = sqlite3.connect(DATABASE_PATH)
