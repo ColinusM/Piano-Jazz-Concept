@@ -53,6 +53,10 @@ def ensure_category_columns():
         cursor.execute("ALTER TABLE songs ADD COLUMN category TEXT DEFAULT NULL")
         print("✓ Added category column to songs table")
 
+    if 'analysis_depth' not in songs_columns:
+        cursor.execute("ALTER TABLE songs ADD COLUMN analysis_depth TEXT DEFAULT NULL")
+        print("✓ Added analysis_depth column to songs table")
+
     conn.commit()
     conn.close()
 
@@ -98,6 +102,7 @@ def get_songs():
             s.recording_year,
             s.featured_artists,
             s.context_notes,
+            s.analysis_depth,
             v.thumbnail_url,
             v.video_type,
             COALESCE(s.category, v.category) as category
@@ -153,6 +158,7 @@ def index():
     performer_filter = request.args.get('performer', 'all')
     style_filter = request.args.get('style', 'all')
     era_filter = request.args.get('era', 'all')
+    depth_filter = request.args.get('depth', 'all')
     view = request.args.get('view', 'songs')
     sort = request.args.get('sort', 'date')  # 'date' (newest first) or 'alpha' (A-Z)
 
@@ -352,6 +358,7 @@ def index():
             'recording_year': s['recording_year'],
             'featured_artists': featured_artists,
             'context_notes': s['context_notes'] or '',
+            'analysis_depth': s['analysis_depth'] or '',
             'thumbnail_url': s['thumbnail_url'],
             'video_type': s['video_type'] or 'uncategorized'
         })
@@ -390,6 +397,10 @@ def index():
     if era_filter != 'all':
         processed = [s for s in processed if s['era'] and era_filter.lower() in s['era'].lower()]
 
+    # Filter by analysis depth
+    if depth_filter != 'all':
+        processed = [s for s in processed if s['analysis_depth'] and depth_filter == s['analysis_depth']]
+
     # Sort
     if sort == 'alpha':
         processed.sort(key=lambda x: x['title'].lower())
@@ -406,7 +417,8 @@ def index():
             'performer': s['performer'] or '',
             'style': s['style'] or '',
             'era': s['era'] or '',
-            'category': cat
+            'category': cat,
+            'analysis_depth': s['analysis_depth'] or ''
         })
 
     all_categories = sorted(set(s['category'] for s in all_processed))
@@ -414,6 +426,7 @@ def index():
     all_performers = sorted(set(s['performer'] for s in all_processed if s['performer']))
     all_styles = sorted(set(s['style'] for s in all_processed if s['style']))
     all_eras = sorted(set(s['era'] for s in all_processed if s['era']))
+    all_depths = sorted(set(s['analysis_depth'] for s in all_processed if s['analysis_depth']))
 
     return render_template('index.html',
                          videos=processed,
@@ -424,10 +437,12 @@ def index():
                          performer_filter=performer_filter,
                          style_filter=style_filter,
                          era_filter=era_filter,
+                         depth_filter=depth_filter,
                          composers=all_composers,
                          performers=all_performers,
                          styles=all_styles,
                          eras=all_eras,
+                         depths=all_depths,
                          is_admin=session.get('admin', False),
                          view=view,
                          sort=sort)
@@ -477,7 +492,8 @@ def update_song():
     # Validate field name to prevent SQL injection
     allowed_fields = ['song_title', 'composer', 'performer', 'original_artist',
                      'composition_year', 'style', 'era', 'additional_info',
-                     'album', 'record_label', 'recording_year', 'context_notes']
+                     'album', 'record_label', 'recording_year', 'context_notes',
+                     'analysis_depth']
 
     if field not in allowed_fields:
         return jsonify({'success': False, 'error': 'Invalid field'}), 400
