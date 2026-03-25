@@ -1161,7 +1161,7 @@
                     <img src="/static/images/youtube-icon.png" alt="YouTube" class="btn-icon">Vidéos
                 </a>
                 <a href="/?view=songs&sort={{ sort }}" class="view-tab {% if view == 'songs' %}active{% endif %}">🎵 Morceaux</a>
-                <a href="/?view=index" class="view-tab">📖 Répertoire</a>
+                <a href="/?view=index" class="view-tab">📖 Real Book</a>
                 <a href="/?view={{ view }}&sort=date&category={{ category }}&search={{ search }}&composer={{ composer_filter }}&performer={{ performer_filter }}&style={{ style_filter }}&era={{ era_filter }}" class="view-tab {% if sort == 'date' %}active{% endif %}">📅 Récents</a>
                 <a href="/?view={{ view }}&sort=alpha&category={{ category }}&search={{ search }}&composer={{ composer_filter }}&performer={{ performer_filter }}&style={{ style_filter }}&era={{ era_filter }}" class="view-tab {% if sort == 'alpha' %}active{% endif %}">🔤 A-Z</a>
             </div>
@@ -1418,8 +1418,6 @@
                     </p>
                     {% endif %}
 
-                    {% if video.featured_artists %}
-                    <p class="composer">⭐ Featured: {{ video.featured_artists|join(', ') }}</p>
                     {% endif %}
 
                     {% if video.context_notes %}
@@ -2181,6 +2179,13 @@
             btn.disabled = false;
         }
     }
+    // Linkify URLs in video descriptions
+    document.querySelectorAll('.video-description').forEach(el => {
+        el.innerHTML = el.innerHTML.replace(
+            /(https?:\/\/[^\s<]+)/g,
+            '<a href="$1" target="_blank" style="color:#4a90d9; text-decoration:underline;">$1</a>'
+        );
+    });
     </script>
 </body>
 </html>
