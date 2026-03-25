@@ -283,7 +283,7 @@ def index():
                     'record_label': '',
                     'recording_year': None,
                     'featured_artists': None,
-                    'context_notes': 'Click Re-extract to populate metadata',
+                    'context_notes': '',
                     'extracted_songs': []
                 })
 
