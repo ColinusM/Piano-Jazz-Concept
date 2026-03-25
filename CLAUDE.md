@@ -312,10 +312,12 @@ await fetch('/api/v0/user/PianoJazzConcept/files/path/home/PianoJazzConcept/Pian
 
 1. **Commit all current changes** with descriptive message
 2. **Read git log** from HEAD back to the last changelog.md edit to find all uncommitted-to-changelog commits
-3. **Update changelog.md** with ALL those commits in hierarchical format:
+3. **Update changelog.md** in NON-TECHNICAL language (the reader is Étienne, a musician, NOT a developer):
    - Group by date
-   - Categorize appropriately
-   - Include all commit hashes
+   - Categorize appropriately (Nouveaux morceaux, Améliorations, Corrections, etc.)
+   - NO commit hashes, NO technical jargon, NO code references
+   - Write as if explaining to a non-technical client: "36 nouveaux morceaux ajoutés" not "batch INSERT into songs table"
+   - Focus on WHAT changed for the user, not HOW it was implemented
    - Add at the TOP of the file
 4. **Commit the changelog update**
 5. **Push to remote** with `git push`
