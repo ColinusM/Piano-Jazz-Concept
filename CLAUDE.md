@@ -72,10 +72,28 @@ The application follows a multi-step data pipeline:
 ### Step 3 — Optional: Count Songs
 `cd utils && python count_songs.py` — Utility script to get statistics on the database
 
+### YouTube Transcript Fetching (Rate Limits)
+
+Use the `youtube-transcript-api` Python package to fetch video transcripts when title/description are ambiguous:
+```python
+from youtube_transcript_api import YouTubeTranscriptApi
+api = YouTubeTranscriptApi()
+transcript = api.fetch('VIDEO_ID', languages=['fr', 'en'])
+```
+
+**RATE LIMIT WARNING:** YouTube blocks IPs that make too many transcript requests. There is no published exact threshold — it depends on IP reputation and request patterns. Typical behavior:
+- **Residential IPs** (like Colin's home connection) can handle ~10-20 requests before risking a temporary block
+- **Cloud provider IPs** are blocked almost immediately
+- Blocks are temporary (usually lift within a few hours)
+- **Always add 2-3 second delays** between transcript fetches: `import time; time.sleep(3)`
+- **Batch carefully:** When processing many videos, do transcript fetches in small batches (5-10 at a time), not all at once
+- **Fallback:** If transcripts are blocked, use web searches or Chrome DevTools MCP to check video content instead
+
 ### Extraction Logic (applies to both methods)
-- Read the video title + description
+- Read the video title + description + transcript (when available)
 - Identify which songs/pieces are analyzed in the video
 - NEVER list Étienne Guéreau as performer — he's the analyst/demonstrator, not the artist
+- **EXCEPTION:** For Étienne's OWN compositions (FLING album, etc.), list him as BOTH composer AND performer
 - If a video analyzes multiple songs → create one song row per song
 - If a video is pure theory with no specific songs → create 0 song rows
 - Extract: song_title, composer, performer, original_artist, album, record_label, recording_year, composition_year, style, era, featured_artists, context_notes, timestamp
