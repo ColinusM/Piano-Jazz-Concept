@@ -81,6 +81,7 @@
         .controls-primary {
             display: flex;
             gap: 0.5rem;
+            justify-content: center;
             align-items: center;
             justify-content: center;
             width: 100%;
@@ -130,26 +131,27 @@
         .view-tabs {
             display: inline-flex;
             background: #f0f0f0;
-            border-radius: 8px;
-            padding: 3px;
-            gap: 2px;
+            border-radius: 10px;
+            padding: 4px;
+            gap: 3px;
         }
         .view-tab {
-            padding: 0.5rem 1.2rem;
+            padding: 0.55rem 1.1rem;
             font-size: 0.9rem;
             font-weight: 500;
             color: #666;
             border: none;
-            border-radius: 6px;
+            border-radius: 8px;
             background: transparent;
             text-decoration: none;
             transition: all 0.2s;
+            white-space: nowrap;
         }
-        .view-tab:hover { color: #333; }
+        .view-tab:hover { color: #333; background: rgba(255,255,255,0.5); }
         .view-tab.active {
             background: #fff;
             color: #333;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            box-shadow: 0 1px 3px rgba(0,0,0,0.12);
         }
         .view-tab .btn-icon {
             height: 1rem;
@@ -157,27 +159,6 @@
             vertical-align: middle;
             margin-right: 0.3rem;
             margin-top: -0.1rem;
-        }
-        .sort-buttons {
-            display: flex;
-            gap: 0.3rem;
-            margin-left: auto;
-        }
-        .sort-btn {
-            padding: 0.4rem 0.6rem;
-            font-size: 1rem;
-            border: none;
-            background: transparent;
-            border-radius: 6px;
-            cursor: pointer;
-            opacity: 0.35;
-            text-decoration: none;
-            transition: all 0.2s;
-        }
-        .sort-btn:hover { opacity: 0.7; }
-        .sort-btn.active {
-            opacity: 1;
-            background: #f0f0f0;
         }
 
         .container {
@@ -963,13 +944,15 @@
         }
 
         select {
-            padding: 0.5rem 1rem;
+            padding: 0.45rem 0.8rem;
             background: #f5f5f5;
             color: #555;
             border: none;
             border-radius: 20px;
             cursor: pointer;
-            font-size: 0.85rem;
+            font-size: 0.82rem;
+            width: auto;
+            max-width: 180px;
         }
         select:hover { background: #eee; }
         select:focus { outline: none; background: #e8e8e8; }
@@ -1177,12 +1160,10 @@
                 <a href="/?view=videos&sort={{ sort }}" class="view-tab {% if view == 'videos' %}active{% endif %}">
                     <img src="/static/images/youtube-icon.png" alt="YouTube" class="btn-icon">Vidéos
                 </a>
-                <a href="/?view=songs&sort={{ sort }}" class="view-tab {% if view == 'songs' %}active{% endif %}">Morceaux</a>
-                <a href="/?view=index" class="view-tab">Répertoire</a>
-            </div>
-            <div class="sort-buttons">
-                <a href="/?view={{ view }}&sort=date&category={{ category }}&search={{ search }}&composer={{ composer_filter }}&performer={{ performer_filter }}&style={{ style_filter }}&era={{ era_filter }}" class="sort-btn {% if sort == 'date' %}active{% endif %}" title="Plus récents">📅</a>
-                <a href="/?view={{ view }}&sort=alpha&category={{ category }}&search={{ search }}&composer={{ composer_filter }}&performer={{ performer_filter }}&style={{ style_filter }}&era={{ era_filter }}" class="sort-btn {% if sort == 'alpha' %}active{% endif %}" title="A-Z">🔤</a>
+                <a href="/?view=songs&sort={{ sort }}" class="view-tab {% if view == 'songs' %}active{% endif %}">🎵 Morceaux</a>
+                <a href="/?view=index" class="view-tab">📖 Répertoire</a>
+                <a href="/?view={{ view }}&sort=date&category={{ category }}&search={{ search }}&composer={{ composer_filter }}&performer={{ performer_filter }}&style={{ style_filter }}&era={{ era_filter }}" class="view-tab {% if sort == 'date' %}active{% endif %}">📅 Récents</a>
+                <a href="/?view={{ view }}&sort=alpha&category={{ category }}&search={{ search }}&composer={{ composer_filter }}&performer={{ performer_filter }}&style={{ style_filter }}&era={{ era_filter }}" class="view-tab {% if sort == 'alpha' %}active{% endif %}">🔤 A-Z</a>
             </div>
         </div>
 
