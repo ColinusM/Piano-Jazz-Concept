@@ -2,6 +2,13 @@
 
 Tous les changements notables apportés à Piano Jazz Concept seront documentés dans ce fichier.
 
+## 2026-03-25 (3)
+
+### Améliorations techniques
+- Refonte complète de l'architecture du site pour améliorer la performance et la maintenabilité
+- Le style visuel (CSS) est désormais chargé dans un fichier séparé, ce qui accélère le chargement des pages grâce au cache du navigateur
+- Nettoyage de boutons et fonctions inutilisés dans l'interface d'administration
+
 ## 2026-03-25 (2)
 
 ### Nouveaux morceaux
