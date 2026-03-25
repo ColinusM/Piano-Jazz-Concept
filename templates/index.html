@@ -1082,11 +1082,11 @@
     {% if is_admin %}
     <div class="admin-indicator">
         👑 Mode Admin
-        <a href="/logout" style="margin-left: 1rem; font-size: 0.85rem; color: #fff; text-decoration: underline;">Logout</a>
+        <a href="/logout" style="margin-left: 1rem; font-size: 0.85rem; color: #fff; text-decoration: underline;">Déconnexion</a>
     </div>
     {% else %}
     <div class="admin-indicator">
-        <a href="/login" style="color: #fff; text-decoration: underline;">🔐 Admin Login</a>
+        <a href="/login" style="color: #fff; text-decoration: underline;">🔐 Admin Connexion</a>
     </div>
     {% endif %}
     <div class="notification-bell-container">
@@ -1099,6 +1099,9 @@
             🔔
             <span class="notification-badge" id="notificationBadge" style="display: none;">0</span>
         </button>
+        <a href="mailto:colin.mignot1@gmail.com?subject=Retour%20%E2%80%94%20Piano%20Jazz%20Concept&body=Bonjour%2C%0A%0AVoici%20mon%20retour%20sur%20le%20catalogue%20Piano%20Jazz%20Concept%20%3A%0A%0A" class="notification-bell" title="Envoyer un retour" style="text-decoration: none; display: inline-flex;">
+            ✉️
+        </a>
         <div class="notification-dropdown" id="notificationDropdown">
             <div class="notification-header">Mises à jour récentes</div>
             <div class="notification-content" id="notificationContent">
@@ -1145,13 +1148,13 @@
     <div class="controls">
         <div class="controls-primary">
             <a href="/?view=videos&sort={{ sort }}" class="btn-rainbow {% if view == 'videos' %}active{% endif %}">
-                <img src="/static/images/youtube-icon.png" alt="YouTube" class="btn-icon"> Videos
+                <img src="/static/images/youtube-icon.png" alt="YouTube" class="btn-icon"> Vidéos
             </a>
             <a href="/?view=songs&sort={{ sort }}" class="btn-rainbow {% if view == 'songs' %}active{% endif %}">
-                🎵 Songs
+                🎵 Morceaux
             </a>
             <a href="/?view=index" class="btn-rainbow">
-                📖 Index
+                📖 Répertoire
             </a>
             <a href="/?view={{ view }}&sort=date&category={{ category }}&search={{ search }}&composer={{ composer_filter }}&performer={{ performer_filter }}&style={{ style_filter }}&era={{ era_filter }}" class="btn-rainbow {% if sort == 'date' %}active{% endif %}" style="margin-left: 1rem;">
                 📅 Récents
@@ -1257,7 +1260,7 @@
                     </h3>
 
                     {% if video.extracted_songs %}
-                    <p class="composer">🎵 Songs extracted:
+                    <p class="composer">🎵 Morceaux extraits :
                         {% for song in video.extracted_songs %}
                         <a href="/?view=songs&search={{ song.song_title }}" target="_blank" style="color: #666; text-decoration: underline; margin-right: 0.5rem;">{{ song.song_title }}</a>{% if not loop.last %},{% endif %}
                         {% endfor %}
