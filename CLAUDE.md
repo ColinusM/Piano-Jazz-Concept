@@ -182,8 +182,9 @@ The API key is loaded from `.env` (`YOUTUBE_API_KEY`). The channel handle is set
 
 The app has 3 view modes:
 - **Songs view** (default, `/?view=songs`) — Shows song cards from `songs` table, filterable by category/composer/style/etc.
-- **Videos view** (admin only, `/?view=videos`) — Shows video cards with extracted songs underneath
+- **Videos view** (`/?view=videos`) — Shows video cards with extracted songs underneath (available to all users)
 - **Index view** (`/?view=index`) — Real Book-style alphabetical list of songs
+- **Sort:** Default is `sort=date` (newest first). Toggle to `sort=alpha` for A-Z.
 
 Templates:
 - `templates/index.html` (2106 lines) — Main catalog with cards, filters, admin features
@@ -195,6 +196,73 @@ Templates:
 - Hosted on **PythonAnywhere** — https://pianojazzconcept.pythonanywhere.com/
 - Database at `database/piano_jazz_videos.db` locally
 - GitHub repo: `ColinusM/Piano-Jazz-Concept`
+
+### PythonAnywhere Setup Details
+- **Account:** PianoJazzConcept (free tier)
+- **Python:** 3.10
+- **Virtualenv:** `/home/PianoJazzConcept/.virtualenvs/pjc`
+- **Source directory:** `/home/PianoJazzConcept/Piano-Jazz-Concept`
+- **WSGI file:** `/var/www/pianojazzconcept_pythonanywhere_com_wsgi.py`
+- **Static files:** URL `/static` → `/home/PianoJazzConcept/Piano-Jazz-Concept/static`
+- **Free tier limit:** Must click "extend" once per month (email reminder sent). No CPU limit on web app itself.
+
+### How to Deploy to Production (NO API TOKEN NEEDED)
+
+Deploy by navigating to the PythonAnywhere webapp page in Chrome (via Chrome DevTools MCP) and using the PythonAnywhere REST API with the CSRF token from the browser cookie. **No API token is required.**
+
+**Step 1 — Navigate to PythonAnywhere in Chrome:**
+```
+Navigate to: https://www.pythonanywhere.com/user/PianoJazzConcept/webapps/
+If logged out, click the "Log in" button (credentials are pre-filled in Chrome).
+```
+
+**Step 2 — Upload changed files from GitHub and reload (run as JS in Chrome):**
+```javascript
+// Run this via mcp__chrome-devtools__evaluate_script
+async () => {
+  const csrf = document.cookie.match(/csrftoken=([^;]+)/)[1];
+  const h = {'X-CSRFToken': csrf};
+
+  // List ALL files that changed (adjust this list per deploy)
+  const files = ['app.py', 'templates/index.html', 'database/piano_jazz_videos.db'];
+
+  for (const file of files) {
+    const resp = await fetch(`https://raw.githubusercontent.com/ColinusM/Piano-Jazz-Concept/main/${file}`);
+    const blob = await resp.blob();
+    const fd = new FormData();
+    fd.append('content', blob, file.split('/').pop());
+    await fetch(`/api/v0/user/PianoJazzConcept/files/path/home/PianoJazzConcept/Piano-Jazz-Concept/${file}`, {
+      method: 'POST', headers: h, body: fd
+    });
+  }
+
+  // Reload the web app
+  await fetch('/api/v0/user/PianoJazzConcept/webapps/PianoJazzConcept.pythonanywhere.com/reload/', {
+    method: 'POST', headers: h
+  });
+
+  return 'deployed';
+}
+```
+
+**Step 3 — Verify:**
+```bash
+curl -s "https://pianojazzconcept.pythonanywhere.com/" | grep -o '[0-9]* morceaux trouvés'
+```
+
+### Deploy Workflow Summary
+1. Make changes locally
+2. `git add <files> && git commit -m "message" && git push`
+3. Open Chrome to PythonAnywhere webapps page (login if needed — creds are pre-filled)
+4. Run the JS snippet above via `mcp__chrome-devtools__evaluate_script` to pull from GitHub and reload
+5. Verify with curl
+
+### Chrome DevTools MCP Notes
+- Chrome DevTools MCP v0.20+ uses **autoConnect** — no debug port needed, just run Chrome normally
+- One-time setup: go to `chrome://inspect/#remote-debugging` in Chrome and enable the toggle
+- If session expires, navigate to PythonAnywhere login page — username and password are pre-filled, just click "Log in"
+- If CSRF cookie error (`Cannot read properties of null`), navigate to PythonAnywhere first to get a fresh cookie
+- See `.claude/rules/chrome-mcp.md` for full MCP setup details
 
 
 **Issue:** When making metadata fields (composer, performer, style, era) clickable for filtering, the inline edit functionality broke.
