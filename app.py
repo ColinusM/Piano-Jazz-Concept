@@ -192,7 +192,8 @@ def index():
                 'performer': s['performer'] or '',
                 'album': s['album'] or '',
                 'style': s['style'] or '',
-                'url': url
+                'url': url,
+                'analysis_depth': s['analysis_depth'] or ''
             })
 
         # Sort alphabetically by song title
