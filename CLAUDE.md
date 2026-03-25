@@ -231,9 +231,10 @@ async () => {
     const blob = await resp.blob();
     const fd = new FormData();
     fd.append('content', blob, file.split('/').pop());
-    await fetch(`/api/v0/user/PianoJazzConcept/files/path/home/PianoJazzConcept/Piano-Jazz-Concept/${file}`, {
-      method: 'POST', headers: h, body: fd
-    });
+    const path = `/api/v0/user/PianoJazzConcept/files/path/home/PianoJazzConcept/Piano-Jazz-Concept/${file}`;
+    // DELETE first to bust cache, then re-upload (see post-mortem)
+    await fetch(path, {method: 'DELETE', headers: h});
+    await fetch(path, {method: 'POST', headers: h, body: fd});
   }
 
   // Reload the web app
@@ -274,6 +275,23 @@ curl -s "https://pianojazzconcept.pythonanywhere.com/" | grep -o '[0-9]* morceau
 
 
 **Key Lesson:** When wrapping editable elements in interactive containers (links, buttons), ensure the JavaScript that manipulates them is aware of the container and targets it appropriately for visibility changes.
+
+
+**Post-mortem: PythonAnywhere file caching causes stale deploys (2026-03-25)**
+
+**Issue:** After uploading a fixed `index.html` via the PythonAnywhere file API (`POST /api/v0/.../files/path/...`), the web app continued serving the old broken version, causing a persistent 500 error (Jinja `TemplateSyntaxError`).
+
+**Root cause:** PythonAnywhere's file API `POST` (overwrite) does not always invalidate the cached version of the file. The web app reload (`POST .../reload/`) restarts the WSGI process, but it may still read the old file from disk cache.
+
+**Fix:** **DELETE the file first, then re-upload it**, then reload:
+```javascript
+// Inside the deploy JS snippet:
+await fetch('/api/v0/user/PianoJazzConcept/files/path/home/PianoJazzConcept/Piano-Jazz-Concept/templates/index.html', {method: 'DELETE', headers: h});
+// Then POST the new file
+// Then reload the webapp
+```
+
+**Key Lesson:** When deploying to PythonAnywhere via the file API, always DELETE then re-upload rather than just overwriting. This ensures the cached file is invalidated. Update the deploy JS snippet accordingly.
 
 
 
