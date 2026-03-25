@@ -20,7 +20,7 @@ load_dotenv()
 app = Flask(__name__)
 app.secret_key = SECRET_KEY
 
-# Database path - use persistent disk on Render, local path otherwise
+# Database path - use /data if available (legacy), local path otherwise
 if os.path.exists('/data'):
     DATABASE_PATH = '/data/piano_jazz_videos.db'
     # Copy database to persistent disk on first run
@@ -1129,7 +1129,7 @@ Be comprehensive BUT conservative! Only extract what's actually there."""
             ],
             temperature=0,
             max_tokens=2000,
-            timeout=60.0  # 60 second timeout for Render
+            timeout=60.0
         )
 
         response_content = response.choices[0].message.content

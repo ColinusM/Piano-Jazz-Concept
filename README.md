@@ -7,7 +7,7 @@
 
 Application web permettant d'explorer et de cataloguer les vidéos YouTube de la chaîne **Piano Jazz Concept** d'Étienne Guéreau. Cette application analyse automatiquement les 193 vidéos de la chaîne et extrait les métadonnées des 177 morceaux de jazz analysés.
 
-Lien vers le site : https://piano-jazz-concept.onrender.com
+Lien vers le site : https://pianojazzconcept.pythonanywhere.com
 
 🔗 **Chaîne YouTube** : [Piano Jazz Concept](https://www.youtube.com/@Pianojazzconcept)
 🌐 **Site officiel** : [pianojazzconcept.com](https://www.pianojazzconcept.com)

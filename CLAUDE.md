@@ -192,9 +192,8 @@ Templates:
 
 ## Deployment
 
-- Hosted on **Render** (web service)
-- Uses **Gunicorn** in production (`gunicorn.conf.py`)
-- Database persisted at `/data/piano_jazz_videos.db` on Render, `database/piano_jazz_videos.db` locally
+- Hosted on **PythonAnywhere** — https://pianojazzconcept.pythonanywhere.com/
+- Database at `database/piano_jazz_videos.db` locally
 - GitHub repo: `ColinusM/Piano-Jazz-Concept`
 
 
