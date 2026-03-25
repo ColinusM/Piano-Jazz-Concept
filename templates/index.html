@@ -1097,11 +1097,6 @@
     {% endif %}
     <div class="notification-bell-container">
         {% if is_admin %}
-        <button class="refresh-btn" id="refreshBtn" onclick="autoUpdateCatalog()" title="Mettre à jour le catalogue avec les dernières vidéos">
-            🔄
-        </button>
-        {% endif %}
-        {% if is_admin %}
         <button class="notification-bell" onclick="toggleNotifications()">
             🔔
             <span class="notification-badge" id="notificationBadge" style="display: none;">0</span>
@@ -1116,11 +1111,6 @@
                 <div class="notification-loading">Chargement...</div>
             </div>
         </div>
-    </div>
-    <div class="refresh-status" id="refreshStatus">
-        <div class="spinner">⏳</div>
-        <h3>Mise à jour en cours...</h3>
-        <p id="refreshMessage">Recherche de nouvelles vidéos...</p>
     </div>
     {% if is_admin %}
     <div class="undo-notification" id="undoNotification">
@@ -1222,15 +1212,6 @@
         <div id="cards" class="video-grid">
             {% for video in videos %}
             <div class="video-card" data-title="{{ video.title }}" data-letter="{{ video.title[0]|upper if video.title else '#' }}" data-song-id="{{ video.id }}">
-                {% if is_admin %}
-                    {% if video.id %}
-                    <button class="delete-song-btn" onclick="deleteSong({{ video.id }}, this)" title="Delete this song">−</button>
-                    {% endif %}
-                    {% if view == 'videos' %}
-                    <button class="add-song-btn" onclick="showSongInput({{ video.video_id }}, this)" title="Add new song">+</button>
-                    <button class="enrich-btn" onclick="enrichVideo({{ video.video_id }}, this)" title="Extract songs with AI">🧠</button>
-                    {% endif %}
-                {% endif %}
                 {% if video.thumbnail_url %}
                 <a href="{{ video.url }}" target="_blank" class="thumbnail-container">
                     <img src="{{ video.thumbnail_url }}" alt="{{ video.title }}" class="video-thumbnail">
@@ -1569,65 +1550,6 @@
         }
 
         // Auto-update catalog function
-        async function autoUpdateCatalog() {
-            const btn = document.getElementById('refreshBtn');
-            const status = document.getElementById('refreshStatus');
-            const message = document.getElementById('refreshMessage');
-
-            // Disable button and show status
-            btn.disabled = true;
-            btn.classList.add('spinning');
-            status.classList.add('show');
-            message.textContent = 'Recherche de nouvelles vidéos sur YouTube...';
-
-            try {
-                const response = await fetch('/api/auto_update', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    }
-                });
-
-                const data = await response.json();
-
-                if (data.success) {
-                    message.textContent = data.message;
-
-                    // Show success message for 3 seconds
-                    setTimeout(() => {
-                        status.classList.remove('show');
-
-                        // Reload page if new content was added
-                        if (data.new_videos > 0 || data.new_songs > 0) {
-                            message.textContent = 'Rechargement de la page...';
-                            status.classList.add('show');
-                            setTimeout(() => {
-                                window.location.reload();
-                            }, 1000);
-                        } else {
-                            btn.disabled = false;
-                            btn.classList.remove('spinning');
-                        }
-                    }, 3000);
-                } else {
-                    message.textContent = 'Erreur: ' + (data.error || 'Erreur inconnue');
-                    setTimeout(() => {
-                        status.classList.remove('show');
-                        btn.disabled = false;
-                        btn.classList.remove('spinning');
-                    }, 3000);
-                }
-            } catch (error) {
-                console.error('Error auto-updating:', error);
-                message.textContent = 'Erreur réseau: ' + error.message;
-                setTimeout(() => {
-                    status.classList.remove('show');
-                    btn.disabled = false;
-                    btn.classList.remove('spinning');
-                }, 3000);
-            }
-        }
-
         // Close notifications dropdown when clicking outside
         document.addEventListener('click', function(event) {
             const bellContainer = document.querySelector('.notification-bell-container');
@@ -1924,7 +1846,8 @@
 
         {% endif %}
 
-        async function deleteSong(songId, btn) {
+        // (deleteSong, enrichVideo, showSongInput, createSongCard removed — deprecated)
+        /*
             const card = btn.closest('.video-card');
             const cardHTML = card.outerHTML;
 
@@ -2079,7 +2002,7 @@
             } catch (error) {
                 alert('❌ Network error: ' + error.message);
             }
-        }
+        */
 
         // Category editing functions
         function toggleCategoryDropdown(event, itemId, currentCategory) {
