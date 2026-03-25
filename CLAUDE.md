@@ -97,6 +97,17 @@ INSERT INTO songs (
 - `featured_artists` = JSON string like `["Artist1", "Artist2"]`
 - `published_at` = copy from the video's `published_at` field
 
+**MANDATORY: Tag `analysis_depth` on EVERY new song.** After inserting songs, you MUST update the `analysis_depth` field for each one:
+- **`Théorie`** = Full musical/harmonic analysis (the video deeply analyzes the song's harmony, melody, arrangement, etc.)
+- **`Mention`** = Song is mentioned, performed, or referenced but not deeply analyzed (editorial, reaction, Étienne's own performances, cultural discussion, plagiarism comparison, etc.)
+
+```sql
+UPDATE songs SET analysis_depth = 'Théorie' WHERE id = ?;
+-- or
+UPDATE songs SET analysis_depth = 'Mention' WHERE id = ?;
+```
+Never leave `analysis_depth` as NULL. This field drives the color-coding in the UI (green = Théorie, blue = Mention).
+
 ## Architecture
 
 ### Database Schema
