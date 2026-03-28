@@ -13,10 +13,9 @@ Tous les changements notables apportés à Piano Jazz Concept seront documentés
 
 ## 2026-03-25 (3)
 
-### Améliorations techniques
-- Refonte complète de l'architecture du site pour améliorer la performance et la maintenabilité
-- Le style visuel (CSS) est désormais chargé dans un fichier séparé, ce qui accélère le chargement des pages grâce au cache du navigateur
-- Nettoyage de boutons et fonctions inutilisés dans l'interface d'administration
+### Améliorations
+- Le site se charge plus rapidement
+- Nettoyage de l'interface d'administration
 
 ## 2026-03-25 (2)
 
@@ -57,9 +56,9 @@ Tous les changements notables apportés à Piano Jazz Concept seront documentés
 ## 2025-10-19
 
 ### Nouvelles fonctionnalités
-- **Bouton cerveau (🧠)** - Extrait les morceaux d'une vidéo individuelle en mode admin
-- **Bouton auto-actualisation** - Rafraîchit le catalogue avec les dernières vidéos YouTube
-- **Ré-extraction intelligente** - Corrige automatiquement les vidéos sans morceaux extraits
+- **Bouton cerveau (🧠)** — Permet de relancer l'extraction des morceaux d'une vidéo en mode admin
+- **Bouton auto-actualisation** — Récupère les dernières vidéos YouTube automatiquement
+- **Ré-extraction intelligente** — Corrige les vidéos dont les morceaux n'avaient pas été trouvés
 
 ### Corrections majeures
 - **Les modifications persistent correctement** - Les changements sur les cartes (compositeur, interprète, style, etc.) sont bien enregistrés
