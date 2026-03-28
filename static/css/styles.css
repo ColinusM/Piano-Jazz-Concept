@@ -692,7 +692,7 @@ select:focus { outline: none; background: #e8e8e8; }
     display: none;
     position: absolute;
     top: 60px;
-    right: 0;
+    left: 0;
     width: 350px;
     max-height: 500px;
     background: white;
