@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Piano Jazz Concept - Catalogue des Vidéos</title>
     <link rel="icon" type="image/png" href="/static/images/favicon.png">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}?v=20260328">
 </head>
 <body>
     {% if is_admin %}
@@ -30,12 +30,6 @@
             <button class="notification-bell" onclick="document.getElementById('feedbackModal').style.display='flex'" title="Envoyer un retour">
                 ✉️
             </button>
-            <div class="notification-dropdown" id="notificationDropdown">
-                <div class="notification-header">Mises à jour récentes</div>
-                <div class="notification-content" id="notificationContent">
-                    <div class="notification-loading">Chargement...</div>
-                </div>
-            </div>
         </div>
         <img src="/static/images/logo.png" alt="Piano Jazz Concept Logo" class="header-logo">
         <h1>🎹 Piano Jazz Concept</h1>
@@ -360,6 +354,17 @@
     {% if is_admin %}
     <script src="{{ url_for('static', filename='js/admin.js') }}"></script>
     {% endif %}
+    <!-- Notification Modal -->
+    <div id="notificationDropdown" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:10000; align-items:center; justify-content:center;">
+        <div style="background:#fff; border-radius:12px; padding:0; max-width:500px; width:90%; position:relative; box-shadow:0 4px 20px rgba(0,0,0,0.3); overflow:hidden;">
+            <button onclick="document.getElementById('notificationDropdown').style.display='none'" style="position:absolute; top:0.8rem; right:1rem; background:none; border:none; font-size:1.5rem; cursor:pointer; color:#fff; z-index:1;">✕</button>
+            <div class="notification-header">Mises à jour récentes</div>
+            <div class="notification-content" id="notificationContent">
+                <div class="notification-loading">Chargement...</div>
+            </div>
+        </div>
+    </div>
+
     <!-- Feedback Modal -->
     <div id="feedbackModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:10000; align-items:center; justify-content:center;">
         <div style="background:#fff; border-radius:12px; padding:2rem; max-width:500px; width:90%; position:relative; box-shadow:0 4px 20px rgba(0,0,0,0.3);">

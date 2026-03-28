@@ -12,8 +12,10 @@ function scrollToTop() {
 
 function toggleNotifications() {
     const dropdown = document.getElementById('notificationDropdown');
-    dropdown.classList.toggle('show');
-    if (dropdown.classList.contains('show')) {
+    if (dropdown.style.display === 'flex') {
+        dropdown.style.display = 'none';
+    } else {
+        dropdown.style.display = 'flex';
         fetchNotifications();
     }
 }
