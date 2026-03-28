@@ -8,22 +8,15 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
 </head>
 <body>
-    {% if is_admin %}
-    <div class="admin-indicator">
-        👑 Mode Admin
-        <a href="/logout" style="margin-left: 1rem; font-size: 0.85rem; color: #fff; text-decoration: underline;">Déconnexion</a>
-    </div>
-    {% else %}
-    <div class="admin-indicator">
-        <a href="/login" style="color: #fff; text-decoration: underline;">🔐 Admin Connexion</a>
-    </div>
-    {% endif %}
-    <div class="notification-bell-container">
+    <div class="top-buttons">
         {% if is_admin %}
+        <a href="/logout" class="notification-bell" title="Déconnexion Admin">👑</a>
         <button class="notification-bell" onclick="toggleNotifications()">
             🔔
             <span class="notification-badge" id="notificationBadge" style="display: none;">0</span>
         </button>
+        {% else %}
+        <a href="/login" class="notification-bell" title="Admin Connexion">🔐</a>
         {% endif %}
         <button class="notification-bell" onclick="document.getElementById('feedbackModal').style.display='flex'" title="Envoyer un retour">
             ✉️

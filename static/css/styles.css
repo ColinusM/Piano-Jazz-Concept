@@ -567,18 +567,14 @@ select:focus { outline: none; background: #e8e8e8; }
     width: 100%;
 }
 
-.admin-indicator {
+.top-buttons {
     position: absolute;
     top: 1rem;
-    right: 1rem;
-    background: #e8e8e8;
-    color: #555;
-    padding: 0.6rem 1.2rem;
-    border-radius: 25px;
-    font-size: 0.85rem;
+    left: 1rem;
     z-index: 1000;
-    font-weight: 600;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
 }
 
 .save-notification {
@@ -652,14 +648,8 @@ select:focus { outline: none; background: #e8e8e8; }
    7. NOTIFICATIONS
    ============================ */
 
-.notification-bell-container {
-    position: absolute;
-    top: 4rem;
-    right: 1rem;
-    z-index: 1000;
-    display: flex;
-    gap: 0.5rem;
-    align-items: center;
+.top-buttons .notification-bell {
+    text-decoration: none;
 }
 
 .notification-bell {

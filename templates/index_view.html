@@ -52,6 +52,26 @@
             gap: 0.3rem;
         }
 
+        .legend-item a {
+            color: inherit;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 0.3rem;
+            padding: 0.2rem 0.6rem;
+            border-radius: 4px;
+            transition: background 0.2s;
+        }
+
+        .legend-item a:hover {
+            background: #eee;
+        }
+
+        .legend-item a.active {
+            background: #e5e5e5;
+            font-weight: bold;
+        }
+
         .nav-buttons {
             text-align: center;
             margin-bottom: 2rem;
@@ -179,10 +199,14 @@
         <p class="subtitle">Piano Jazz Concept - Catalogue Alphabétique</p>
         <div class="legend">
             <div class="legend-item">
-                <span style="color: #16a34a; font-weight: bold;">■</span> Théorie
+                <a href="/?view=index{% if depth_filter == 'Théorie' %}{% else %}&depth=Th%C3%A9orie{% endif %}" class="{% if depth_filter == 'Théorie' %}active{% endif %}">
+                    <span style="color: #16a34a; font-weight: bold;">■</span> Théorie
+                </a>
             </div>
             <div class="legend-item">
-                <span style="color: #2563eb; font-weight: bold;">■</span> Mention
+                <a href="/?view=index{% if depth_filter == 'Mention' %}{% else %}&depth=Mention{% endif %}" class="{% if depth_filter == 'Mention' %}active{% endif %}">
+                    <span style="color: #2563eb; font-weight: bold;">■</span> Mention
+                </a>
             </div>
             <div class="legend-item">
                 <span>▪ ↷ Fiche</span>

@@ -55,10 +55,14 @@ def index():
                 'analysis_depth': s['analysis_depth'] or ''
             })
 
+        if depth_filter != 'all':
+            processed = [s for s in processed if s['analysis_depth'] == depth_filter]
+
         processed.sort(key=lambda x: x['song_title'].lower())
 
         return render_template('index_view.html',
                              songs=processed,
+                             depth_filter=depth_filter,
                              is_admin=session.get('admin', False))
 
     # Videos view
