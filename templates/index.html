@@ -8,26 +8,6 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
 </head>
 <body>
-    <div class="top-buttons">
-        {% if is_admin %}
-        <a href="/logout" class="notification-bell" title="Déconnexion Admin">👑</a>
-        <button class="notification-bell" onclick="toggleNotifications()">
-            🔔
-            <span class="notification-badge" id="notificationBadge" style="display: none;">0</span>
-        </button>
-        {% else %}
-        <a href="/login" class="notification-bell" title="Admin Connexion">🔐</a>
-        {% endif %}
-        <button class="notification-bell" onclick="document.getElementById('feedbackModal').style.display='flex'" title="Envoyer un retour">
-            ✉️
-        </button>
-        <div class="notification-dropdown" id="notificationDropdown">
-            <div class="notification-header">Mises à jour récentes</div>
-            <div class="notification-content" id="notificationContent">
-                <div class="notification-loading">Chargement...</div>
-            </div>
-        </div>
-    </div>
     {% if is_admin %}
     <div class="undo-notification" id="undoNotification">
         <span id="undoMessage"></span>
@@ -37,6 +17,26 @@
     {% endif %}
 
     <header>
+        <div class="top-buttons">
+            {% if is_admin %}
+            <a href="/logout" class="notification-bell" title="Déconnexion Admin">👑</a>
+            <button class="notification-bell" onclick="toggleNotifications()">
+                🔔
+                <span class="notification-badge" id="notificationBadge" style="display: none;">0</span>
+            </button>
+            {% else %}
+            <a href="/login" class="notification-bell" title="Admin Connexion">🔐</a>
+            {% endif %}
+            <button class="notification-bell" onclick="document.getElementById('feedbackModal').style.display='flex'" title="Envoyer un retour">
+                ✉️
+            </button>
+            <div class="notification-dropdown" id="notificationDropdown">
+                <div class="notification-header">Mises à jour récentes</div>
+                <div class="notification-content" id="notificationContent">
+                    <div class="notification-loading">Chargement...</div>
+                </div>
+            </div>
+        </div>
         <img src="/static/images/logo.png" alt="Piano Jazz Concept Logo" class="header-logo">
         <h1>🎹 Piano Jazz Concept</h1>
         <p class="subtitle">Catalogue complet des analyses musicales</p>

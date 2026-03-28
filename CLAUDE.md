@@ -286,6 +286,7 @@ curl -s "https://pianojazzconcept.pythonanywhere.com/" | grep -o '[0-9]* morceau
 3. Open Chrome to PythonAnywhere webapps page (login if needed — creds are pre-filled)
 4. Run the JS snippet above via `mcp__chrome-devtools__evaluate_script` to pull from GitHub and reload
 5. Verify with curl
+6. Open the production site in Chrome — if no tab with `pianojazzconcept.pythonanywhere.com` is already open, use `mcp__chrome-devtools__new_page` to open `https://pianojazzconcept.pythonanywhere.com/` so the user can see the result immediately
 
 ### Chrome DevTools MCP Notes
 - Chrome DevTools MCP v0.20+ uses **autoConnect** — no debug port needed, just run Chrome normally
