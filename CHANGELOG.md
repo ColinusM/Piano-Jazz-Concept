@@ -6,6 +6,7 @@ Tous les changements notables apportés à Piano Jazz Concept seront documentés
 
 ### Améliorations
 - Les boutons en haut de page (connexion admin, notifications, feedback) sont maintenant à gauche, en forme de cercles uniformes, empilés verticalement dans le bandeau bleu
+- Le panneau de notifications s'ouvre correctement sans être coupé par le bord de l'écran
 - Dans la vue Real Book (index alphabétique), les carrés vert « Théorie » et bleu « Mention » de la légende sont maintenant cliquables : un clic filtre les morceaux par type d'analyse, un second clic enlève le filtre
 
 ---
