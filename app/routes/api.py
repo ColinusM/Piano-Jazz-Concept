@@ -540,7 +540,8 @@ def _needs_update(description):
 
 def _is_already_updated(description):
     """Check if a description has already been updated."""
-    return NEW_CONTENT_MARKER.lower() in description.lower()
+    return (NEW_CONTENT_MARKER.lower() in description.lower() or
+            NEW_URL in description)
 
 
 def _transform_description(description):
