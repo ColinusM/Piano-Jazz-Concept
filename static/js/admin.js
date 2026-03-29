@@ -290,9 +290,14 @@ async function runYouTubeAnalysis() {
             document.getElementById('ytTestBtn').textContent = '🧪 Tester sur ' + testCount + ' vidéo' + (testCount > 1 ? 's' : '');
             document.getElementById('ytAllBtn').innerHTML = '✅ Tout appliquer (' + totalActions + ' vidéo' + (totalActions > 1 ? 's' : '') + ')';
 
-            // Show which videos will be tested
+            // Show which videos will be affected
             if (result.test_preview && result.test_preview.length > 0) {
-                let previewHtml = '<p style="margin-top:0.8rem; font-size:0.85rem; color:#555;">Le test sera effectué sur :</p>';
+                let previewHtml = '';
+                if (totalActions > 3) {
+                    previewHtml += '<p style="margin-top:0.8rem; font-size:0.85rem; color:#555;">Le test sera effectué sur :</p>';
+                } else {
+                    previewHtml += '<p style="margin-top:0.8rem; font-size:0.85rem; color:#555;">Vidéo(s) concernée(s) :</p>';
+                }
                 previewHtml += '<ul style="list-style:none; padding:0; margin:0.3rem 0 0 0;">';
                 for (const title of result.test_preview) {
                     previewHtml += '<li style="font-size:0.85rem; color:#333; margin-bottom:0.3rem;">📹 ' + title + '</li>';
