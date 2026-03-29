@@ -334,9 +334,12 @@ await fetch('/api/v0/user/PianoJazzConcept/files/path/home/PianoJazzConcept/Pian
 3. **Update changelog.md** in NON-TECHNICAL language (the reader is Étienne, a musician, NOT a developer):
    - Group by date
    - Categorize appropriately (Nouveaux morceaux, Améliorations, Corrections, etc.)
-   - NO commit hashes, NO technical jargon, NO code references
-   - Write as if explaining to a non-technical client: "36 nouveaux morceaux ajoutés" not "batch INSERT into songs table"
-   - Focus on WHAT changed for the user, not HOW it was implemented
+   - **STRICTLY FORBIDDEN words/concepts:** CSS, HTML, JavaScript, API, architecture, refonte, cache, navigateur, fichier séparé, WSGI, Flask, template, endpoint, maintenabilité, performance technique, positionnement, fixed/absolute, z-index, commit, deploy, migration, base de données, SQL, requête
+   - NO commit hashes, NO technical jargon, NO code references, NO implementation details
+   - Write as if explaining to someone who has NEVER seen a line of code: describe only the VISIBLE result
+   - **GOOD examples:** "Le site se charge plus vite", "Les boutons sont maintenant à gauche dans le bandeau", "Le panneau de notifications ne déborde plus de l'écran"
+   - **BAD examples:** "Refonte de l'architecture", "Le CSS est dans un fichier séparé", "Position fixed au lieu de absolute", "Cache du navigateur optimisé"
+   - Focus ONLY on WHAT changed visually or functionally for the user, NEVER on HOW it was implemented
    - Add at the TOP of the file
 4. **Commit the changelog update**
 5. **Push to remote** with `git push`
