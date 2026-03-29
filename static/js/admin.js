@@ -286,9 +286,11 @@ async function runYouTubeAnalysis() {
         `;
 
         if (totalActions > 0) {
-            document.getElementById('ytUpdateCount').textContent = totalActions;
+            const testCount = Math.min(3, totalActions);
+            document.getElementById('ytTestBtn').textContent = '🧪 Tester sur ' + testCount + ' vidéo' + (testCount > 1 ? 's' : '');
+            document.getElementById('ytAllBtn').innerHTML = '✅ Tout appliquer (' + totalActions + ' vidéo' + (totalActions > 1 ? 's' : '') + ')';
 
-            // Show which 3 videos will be tested
+            // Show which videos will be tested
             if (result.test_preview && result.test_preview.length > 0) {
                 let previewHtml = '<p style="margin-top:0.8rem; font-size:0.85rem; color:#555;">Le test sera effectué sur :</p>';
                 previewHtml += '<ul style="list-style:none; padding:0; margin:0.3rem 0 0 0;">';
@@ -297,6 +299,13 @@ async function runYouTubeAnalysis() {
                 }
                 previewHtml += '</ul>';
                 content.innerHTML += previewHtml;
+            }
+
+            // If only 1-3 videos, hide test button — just show "Tout appliquer"
+            if (totalActions <= 3) {
+                document.getElementById('ytTestBtn').style.display = 'none';
+            } else {
+                document.getElementById('ytTestBtn').style.display = '';
             }
 
             actions.style.display = 'block';
