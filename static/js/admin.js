@@ -299,8 +299,8 @@ async function runYouTubeAnalysis() {
                     previewHtml += '<p style="margin-top:0.8rem; font-size:0.85rem; color:#555;">Vidéo(s) concernée(s) :</p>';
                 }
                 previewHtml += '<ul style="list-style:none; padding:0; margin:0.3rem 0 0 0;">';
-                for (const title of result.test_preview) {
-                    previewHtml += '<li style="font-size:0.85rem; color:#333; margin-bottom:0.3rem;">📹 ' + title + '</li>';
+                for (const item of result.test_preview) {
+                    previewHtml += '<li style="font-size:0.85rem; margin-bottom:0.3rem;">📹 <a href="https://www.youtube.com/watch?v=' + item.video_id + '" target="_blank" style="color:#4a90d9; text-decoration:underline;">' + item.title + '</a></li>';
                 }
                 previewHtml += '</ul>';
                 content.innerHTML += previewHtml;

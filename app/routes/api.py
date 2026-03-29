@@ -752,7 +752,7 @@ def youtube_analyze():
         _save_youtube_credentials(credentials)
 
         # Preview: first 3 video titles for the test button
-        test_preview = [v['title'] for v in all_actions[:3]]
+        test_preview = [{'title': v['title'], 'video_id': v['video_id']} for v in all_actions[:3]]
 
         return jsonify({
             'success': True,
