@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Piano Jazz Concept - Catalogue des Vidéos</title>
     <link rel="icon" type="image/png" href="/static/images/favicon.png">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}?v=20260328">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}?v=20260329">
 </head>
 <body>
     {% if is_admin %}
@@ -388,7 +388,7 @@
             <h3 style="margin:0 0 1rem 0; font-size:1.2rem;">🔗 Mise à jour des liens YouTube</h3>
             <p style="color:#555; font-size:0.9rem; margin:0 0 0.8rem 0;">
                 Cet outil va automatiquement remplacer l'ancien lien du site par le nouveau
-                dans les descriptions de toutes tes vidéos YouTube.
+                dans les descriptions de toutes vos vidéos YouTube.
             </p>
             <div style="background:#f8f8f8; border-radius:8px; padding:1rem; margin:0 0 1rem 0; font-size:0.85rem;">
                 <p style="margin:0 0 0.5rem 0; color:#c00;">❌ <strong>Ancien :</strong> piano-jazz-concept.onrender.com/...</p>
@@ -399,15 +399,15 @@
                 il sera remplacé par le nouveau lien ci-dessus.
             </p>
             <ul style="color:#555; font-size:0.85rem; margin:0 0 1rem 0; padding-left:1.2rem; line-height:1.6;">
-                <li>Seul l'ancien lien est modifié — tout le reste de tes descriptions reste intact</li>
-                <li>Les vidéos sans ancien lien ne sont pas touchées</li>
-                <li>Tu pourras d'abord tester sur 3 vidéos avant d'appliquer à toutes</li>
-                <li>Une sauvegarde de tes descriptions sera créée avant toute modification</li>
+                <li>Seul le lien est modifié — tout le reste de vos descriptions reste intact</li>
+                <li>Les vidéos sans lien recevront le nouveau lien à la fin de la description</li>
+                <li>Vous pourrez d'abord tester sur 3 vidéos avant d'appliquer à toutes</li>
+                <li>Une sauvegarde de vos descriptions sera créée avant toute modification</li>
             </ul>
             <div style="background:#f0f4ff; border-radius:8px; padding:0.8rem; margin:0 0 1rem 0; font-size:0.85rem; color:#336;">
-                <strong>Note :</strong> À l'étape suivante, Google va te demander d'autoriser
-                l'accès à ta chaîne YouTube. C'est normal — cet outil utilise l'API officielle
-                de YouTube pour modifier tes descriptions en toute sécurité.
+                <strong>Note :</strong> À l'étape suivante, Google va vous demander d'autoriser
+                l'accès à votre chaîne YouTube. C'est normal — cet outil utilise l'API officielle
+                de YouTube pour modifier vos descriptions en toute sécurité.
             </div>
             <p style="color:#888; font-size:0.8rem; margin:0 0 1rem 0;">
                 ⚠️ YouTube limite les modifications à 190 vidéos par jour.
@@ -425,11 +425,11 @@
             <button onclick="document.getElementById('ytModal2').style.display='none'" style="position:absolute; top:0.8rem; right:1rem; background:none; border:none; font-size:1.5rem; cursor:pointer; color:#999;">✕</button>
             <h3 style="margin:0 0 1rem 0; font-size:1.2rem;" id="ytModal2Title">📊 Analyse en cours...</h3>
             <div id="ytAnalysisContent">
-                <div style="text-align:center; color:#888; padding:2rem;">⏳ Analyse de tes vidéos YouTube...<br><small>(peut prendre 30 secondes)</small></div>
+                <div style="text-align:center; color:#888; padding:2rem;">⏳ Analyse de vos vidéos YouTube...<br><small>(peut prendre 30 secondes)</small></div>
             </div>
             <div id="ytAnalysisActions" style="display:none; margin-top:1rem;">
                 <button onclick="applyYouTubeUpdate('test')" id="ytTestBtn" style="width:100%; padding:0.8rem; background:#2c3e50; color:#fff; border:none; border-radius:8px; font-size:1rem; cursor:pointer; margin-bottom:0.5rem;">
-                    🧪 Tester sur 3 vidéos d'abord
+                    🧪 Tester sur 3 vidéos
                 </button>
                 <button onclick="applyYouTubeUpdate('all')" id="ytAllBtn" style="width:100%; padding:0.8rem; background:#333; color:#fff; border:none; border-radius:8px; font-size:1rem; cursor:pointer;">
                     ✅ Tout appliquer (<span id="ytUpdateCount">0</span> vidéos)

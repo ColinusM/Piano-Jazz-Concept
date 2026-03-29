@@ -255,7 +255,7 @@ async function runYouTubeAnalysis() {
     modal.style.display = 'flex';
     actions.style.display = 'none';
     title.textContent = '📊 Analyse en cours...';
-    content.innerHTML = '<div style="text-align:center; color:#888; padding:2rem;">⏳ Analyse de tes vidéos YouTube...<br><small>(peut prendre 30 secondes)</small></div>';
+    content.innerHTML = '<div style="text-align:center; color:#888; padding:2rem;"><div class="yt-spinner"></div><br>Analyse de vos vidéos YouTube...<br><small>(peut prendre 30 secondes)</small></div>';
 
     try {
         const response = await fetch('/api/youtube-analyze', {
@@ -266,7 +266,7 @@ async function runYouTubeAnalysis() {
 
         if (!result.success) {
             if (result.error === 'not_authenticated') {
-                content.innerHTML = '<div style="text-align:center; color:#c00; padding:1rem;">Session expirée. Relance l\'outil depuis le bouton 🔗.</div>';
+                content.innerHTML = '<div style="text-align:center; color:#c00; padding:1rem;">Session expirée. Relancez l\'outil depuis le bouton 🔗.</div>';
             } else {
                 content.innerHTML = '<div style="color:#c00; padding:1rem;">Erreur : ' + result.error + '</div>';
             }
@@ -275,17 +275,18 @@ async function runYouTubeAnalysis() {
         }
 
         title.textContent = '📊 Analyse terminée';
+        const totalActions = (result.to_replace || 0) + (result.to_add || 0);
         content.innerHTML = `
             <div style="font-size:0.95rem; color:#333;">
                 <p style="margin-bottom:0.8rem;">📹 <strong>${result.total}</strong> vidéos analysées</p>
-                ${result.to_update > 0 ? `<p style="margin-bottom:0.5rem; color:#c00;">🔄 <strong>${result.to_update}</strong> vidéo(s) avec l'ancien lien</p>` : ''}
+                ${result.to_replace > 0 ? `<p style="margin-bottom:0.5rem; color:#c00;">🔄 <strong>${result.to_replace}</strong> vidéo(s) — lien à remplacer</p>` : ''}
+                ${result.to_add > 0 ? `<p style="margin-bottom:0.5rem; color:#36c;">➕ <strong>${result.to_add}</strong> vidéo(s) — lien à ajouter</p>` : ''}
                 ${result.already_correct > 0 ? `<p style="margin-bottom:0.5rem; color:#090;">✅ <strong>${result.already_correct}</strong> vidéo(s) déjà à jour</p>` : ''}
-                <p style="color:#888;">⏭️ <strong>${result.no_link}</strong> vidéo(s) sans lien (non touchées)</p>
             </div>
         `;
 
-        if (result.to_update > 0) {
-            document.getElementById('ytUpdateCount').textContent = result.to_update;
+        if (totalActions > 0) {
+            document.getElementById('ytUpdateCount').textContent = totalActions;
 
             // Show which 3 videos will be tested
             if (result.test_preview && result.test_preview.length > 0) {
@@ -300,7 +301,7 @@ async function runYouTubeAnalysis() {
 
             actions.style.display = 'block';
         } else {
-            content.innerHTML += '<p style="margin-top:1rem; color:#090; font-weight:600;">Toutes tes descriptions sont déjà à jour !</p>';
+            content.innerHTML += '<p style="margin-top:1rem; color:#090; font-weight:600;">Toutes vos descriptions sont déjà à jour !</p>';
         }
     } catch (error) {
         title.textContent = '❌ Erreur';
@@ -309,14 +310,18 @@ async function runYouTubeAnalysis() {
 }
 
 async function applyYouTubeUpdate(mode) {
-    const testBtn = document.getElementById('ytTestBtn');
-    const allBtn = document.getElementById('ytAllBtn');
-    testBtn.disabled = true;
-    allBtn.disabled = true;
+    const content = document.getElementById('ytAnalysisContent');
+    const actions = document.getElementById('ytAnalysisActions');
+    const title = document.getElementById('ytModal2Title');
+    const count = mode === 'test' ? 3 : parseInt(document.getElementById('ytUpdateCount').textContent) || 0;
+    const estimate = Math.max(10, Math.ceil(count * 2));
 
-    const activeBtn = mode === 'test' ? testBtn : allBtn;
-    const originalText = activeBtn.innerHTML;
-    activeBtn.textContent = '⏳ Mise à jour en cours...';
+    actions.style.display = 'none';
+    title.textContent = '⏳ Mise à jour en cours...';
+    content.innerHTML = '<div style="text-align:center; color:#888; padding:2rem;">'
+        + '<div class="yt-spinner"></div><br>'
+        + 'Modification de ' + count + ' vidéo(s)...<br>'
+        + '<small>Cela peut prendre environ ' + estimate + ' secondes.<br>Merci de ne pas fermer cette page.</small></div>';
 
     try {
         const response = await fetch('/api/youtube-apply', {
@@ -327,17 +332,9 @@ async function applyYouTubeUpdate(mode) {
         const result = await response.json();
 
         document.getElementById('ytModal2').style.display = 'none';
-        testBtn.disabled = false;
-        allBtn.disabled = false;
-        testBtn.innerHTML = originalText === testBtn.innerHTML ? originalText : testBtn.innerHTML;
-        allBtn.innerHTML = originalText === allBtn.innerHTML ? originalText : allBtn.innerHTML;
-
         showYouTubeResults(result, mode);
     } catch (error) {
-        activeBtn.innerHTML = originalText;
-        testBtn.disabled = false;
-        allBtn.disabled = false;
-        alert('Erreur réseau : ' + error.message);
+        content.innerHTML = '<div style="color:#c00; padding:1rem;">Erreur réseau : ' + error.message + '</div>';
     }
 }
 
@@ -372,7 +369,7 @@ function showYouTubeResults(result, mode) {
 
         if (mode === 'test') {
             html += '<p style="color:#555; font-size:0.85rem; background:#f8f8f8; padding:0.8rem; border-radius:8px;">';
-            html += 'Clique sur les liens ci-dessus pour vérifier sur YouTube que les descriptions sont correctes.';
+            html += 'Cliquez sur les liens ci-dessus pour vérifier sur YouTube que les descriptions sont correctes.';
             html += '</p>';
         }
     }
@@ -387,7 +384,7 @@ function showYouTubeResults(result, mode) {
     }
 
     if (result.quota_exceeded) {
-        html += '<p style="color:#c90; font-weight:600; margin-top:1rem;">⚠️ Limite YouTube atteinte pour aujourd\'hui. Reviens demain et relance l\'outil pour terminer.</p>';
+        html += '<p style="color:#c90; font-weight:600; margin-top:1rem;">⚠️ Limite YouTube atteinte pour aujourd\'hui. Revenez demain et relancez l\'outil pour terminer.</p>';
     }
 
     content.innerHTML = html;
@@ -403,6 +400,10 @@ function showYouTubeResults(result, mode) {
 }
 
 async function applyYouTubeUpdateFromResults() {
+    const remainingBtn = document.getElementById('ytResultsActions').querySelector('button');
+    const count = remainingBtn ? parseInt(remainingBtn.textContent.match(/\d+/)?.[0]) || 0 : 0;
+    const estimate = Math.max(10, Math.ceil(count * 2));
+
     document.getElementById('ytModal3').style.display = 'none';
 
     const modal2 = document.getElementById('ytModal2');
@@ -413,7 +414,10 @@ async function applyYouTubeUpdateFromResults() {
     modal2.style.display = 'flex';
     actions2.style.display = 'none';
     title2.textContent = '⏳ Mise à jour en cours...';
-    content2.innerHTML = '<div style="text-align:center; color:#888; padding:2rem;">⏳ Modification des descriptions...<br><small>(ne ferme pas cette page)</small></div>';
+    content2.innerHTML = '<div style="text-align:center; color:#888; padding:2rem;">'
+        + '<div class="yt-spinner"></div><br>'
+        + 'Modification de ' + count + ' vidéo(s)...<br>'
+        + '<small>Cela peut prendre environ ' + estimate + ' secondes.<br>Merci de ne pas fermer cette page.</small></div>';
 
     try {
         const response = await fetch('/api/youtube-apply', {

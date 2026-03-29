@@ -741,9 +741,9 @@ def youtube_analyze():
                 break
 
         # Batch-fetch video snippets + status (50 at a time) and categorize
-        to_update = []
+        to_update = []  # Videos with old content to replace
+        to_add = []     # Videos with no link at all — will add the new link
         already_correct = 0
-        no_link = 0
         skipped_private = 0
 
         for i in range(0, len(all_video_ids), 50):
@@ -768,18 +768,20 @@ def youtube_analyze():
                 already_done = _is_already_updated(description)
 
                 if needs_update:
-                    to_update.append({'video_id': video_id, 'title': title})
+                    to_update.append({'video_id': video_id, 'title': title, 'action': 'replace'})
                 elif already_done:
                     already_correct += 1
                 else:
-                    no_link += 1
+                    to_add.append({'video_id': video_id, 'title': title, 'action': 'add'})
+
+        # Combine both lists: replacements first, then additions
+        all_actions = to_update + to_add
 
         # Save analysis to file (too large for cookie-based session)
         analysis = {
-            'to_update': to_update,
+            'to_update': all_actions,
             'already_correct': already_correct,
-            'no_link': no_link,
-            'total': len(all_video_ids),
+            'total': len(all_video_ids) - skipped_private,
             'analyzed_at': datetime.now().isoformat()
         }
         os.makedirs(DATA_DIR, exist_ok=True)
@@ -791,13 +793,13 @@ def youtube_analyze():
         _save_youtube_credentials(credentials)
 
         # Preview: first 3 video titles for the test button
-        test_preview = [v['title'] for v in to_update[:3]]
+        test_preview = [v['title'] for v in all_actions[:3]]
 
         return jsonify({
             'success': True,
-            'to_update': len(to_update),
+            'to_replace': len(to_update),
+            'to_add': len(to_add),
             'already_correct': already_correct,
-            'no_link': no_link,
             'skipped_private': skipped_private,
             'total': len(all_video_ids) - skipped_private,
             'test_preview': test_preview
@@ -887,14 +889,21 @@ def youtube_apply():
 
                 snippet = response['items'][0]['snippet']
                 description = snippet.get('description', '')
+                action = video_info.get('action', 'replace')
 
-                # Verify content still needs updating
-                if not _needs_update(description):
-                    successfully_processed_ids.add(vid)  # Already fixed
-                    continue
-
-                # Apply all transformations
-                new_description = _transform_description(description)
+                if action == 'replace':
+                    # Verify content still needs updating
+                    if not _needs_update(description):
+                        successfully_processed_ids.add(vid)  # Already fixed
+                        continue
+                    # Apply all transformations
+                    new_description = _transform_description(description)
+                else:
+                    # action == 'add': append new link at end of description
+                    if _is_already_updated(description):
+                        successfully_processed_ids.add(vid)  # Already has new link
+                        continue
+                    new_description = description.rstrip() + '\n\n' + NEW_URL if description.strip() else NEW_URL
 
                 # Construct FULL snippet with ALL required fields preserved
                 updated_snippet = {
