@@ -85,9 +85,13 @@ while True:
                            thumbnails.get('default'))['url']
 
             cursor.execute('''
-                INSERT OR REPLACE INTO videos (video_id, title, description, url, published_at, thumbnail_url)
+                INSERT OR IGNORE INTO videos (video_id, title, description, url, published_at, thumbnail_url)
                 VALUES (?, ?, ?, ?, ?, ?)
             ''', (video_id, title, description, url, published_at, thumbnail_url))
+            cursor.execute('''
+                UPDATE videos SET title=?, description=?, url=?, published_at=?, thumbnail_url=?
+                WHERE video_id=?
+            ''', (title, description, url, published_at, thumbnail_url, video_id))
 
             video_count += 1
             print(f"Added: {title}")
