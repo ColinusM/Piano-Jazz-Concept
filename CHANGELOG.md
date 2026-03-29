@@ -10,9 +10,6 @@ Tous les changements notables apportés à Piano Jazz Concept seront documentés
 ### Améliorations
 - Les descriptions des vidéos respectent maintenant les retours à la ligne (chaque lien apparaît sur sa propre ligne)
 
-### Corrections
-- Correction du lien dans la description de la dernière vidéo publiée (« Mon diagnostic d'Angine de poitrine… »)
-
 ### Nouveaux morceaux
 - **8 nouveaux morceaux ajoutés au catalogue** — Le catalogue passe de 291 à 299 morceaux (140 vidéos couvertes sur 234)
 - 2 nouvelles vidéos de la chaîne intégrées :
