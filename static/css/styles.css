@@ -517,6 +517,7 @@ select:focus { outline: none; background: #e8e8e8; }
     font-size: 0.9rem;
     margin-top: 0.8rem;
     line-height: 1.5;
+    white-space: pre-line;
 }
 
 .video-description.truncated {
