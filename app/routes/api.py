@@ -740,19 +740,26 @@ def youtube_analyze():
             if not next_page_token:
                 break
 
-        # Batch-fetch video snippets (50 at a time) and categorize
+        # Batch-fetch video snippets + status (50 at a time) and categorize
         to_update = []
         already_correct = 0
         no_link = 0
+        skipped_private = 0
 
         for i in range(0, len(all_video_ids), 50):
             batch_ids = all_video_ids[i:i + 50]
             videos_response = youtube.videos().list(
-                part='snippet',
+                part='snippet,status',
                 id=','.join(batch_ids)
             ).execute()
 
             for video in videos_response.get('items', []):
+                # Skip private videos
+                privacy = video.get('status', {}).get('privacyStatus', 'public')
+                if privacy == 'private':
+                    skipped_private += 1
+                    continue
+
                 video_id = video['id']
                 title = video['snippet'].get('title', '')
                 description = video['snippet'].get('description', '')
@@ -783,12 +790,17 @@ def youtube_analyze():
         # Refresh saved credentials (token may have been auto-refreshed)
         _save_youtube_credentials(credentials)
 
+        # Preview: first 3 video titles for the test button
+        test_preview = [v['title'] for v in to_update[:3]]
+
         return jsonify({
             'success': True,
             'to_update': len(to_update),
             'already_correct': already_correct,
             'no_link': no_link,
-            'total': len(all_video_ids)
+            'skipped_private': skipped_private,
+            'total': len(all_video_ids) - skipped_private,
+            'test_preview': test_preview
         })
 
     except HttpError as e:

@@ -286,6 +286,18 @@ async function runYouTubeAnalysis() {
 
         if (result.to_update > 0) {
             document.getElementById('ytUpdateCount').textContent = result.to_update;
+
+            // Show which 3 videos will be tested
+            if (result.test_preview && result.test_preview.length > 0) {
+                let previewHtml = '<p style="margin-top:0.8rem; font-size:0.85rem; color:#555;">Le test sera effectué sur :</p>';
+                previewHtml += '<ul style="list-style:none; padding:0; margin:0.3rem 0 0 0;">';
+                for (const title of result.test_preview) {
+                    previewHtml += '<li style="font-size:0.85rem; color:#333; margin-bottom:0.3rem;">📹 ' + title + '</li>';
+                }
+                previewHtml += '</ul>';
+                content.innerHTML += previewHtml;
+            }
+
             actions.style.display = 'block';
         } else {
             content.innerHTML += '<p style="margin-top:1rem; color:#090; font-weight:600;">Toutes tes descriptions sont déjà à jour !</p>';
