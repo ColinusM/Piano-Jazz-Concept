@@ -2,6 +2,23 @@
 
 Tous les changements notables apportés à Piano Jazz Concept seront documentés dans ce fichier.
 
+## 2026-03-29
+
+### Nouveaux morceaux
+- **8 nouveaux morceaux ajoutés au catalogue** — Le catalogue passe de 291 à 299 morceaux (140 vidéos couvertes sur 234)
+- 2 nouvelles vidéos de la chaîne intégrées :
+  - **Mon diagnostic d'Angine de poitrine…** — Discussion sur le duo viral québécois Angine de Poitrine (math rock, microtonalité)
+  - **La Chronique culturelle #4** — 7 morceaux chroniqués :
+    - I'm Nice (Guilhem Flouzat & Isabel Sörling)
+    - Mabel (Cecil L. Recchia, hommage à Django Reinhardt)
+    - Spiritual (Stéphane Kerecki, hommage à Charlie Haden)
+    - Luna (Pierre Bertrand, saxophone soprano)
+    - We Are (Alina Engibaryan)
+    - Arabesque (Jean-Pierre Como, feat. Paolo Fresu)
+    - Pétropolis (Marc Benham)
+
+---
+
 ## 2026-03-28
 
 ### Améliorations
