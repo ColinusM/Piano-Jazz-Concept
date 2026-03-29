@@ -24,6 +24,9 @@
                 🔔
                 <span class="notification-badge" id="notificationBadge" style="display: none;">0</span>
             </button>
+            <button class="notification-bell" onclick="openYouTubeUpdateModal()" title="Mettre à jour les liens YouTube">
+                🔗
+            </button>
             {% else %}
             <a href="/login" class="notification-bell" title="Admin Connexion">🔐</a>
             {% endif %}
@@ -376,5 +379,74 @@
         </div>
     </div>
     <script src="{{ url_for('static', filename='js/feedback.js') }}"></script>
+
+    {% if is_admin %}
+    <!-- YouTube Description Updater — Modal 1: Explanation -->
+    <div id="ytModal1" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:10000; align-items:center; justify-content:center;">
+        <div style="background:#fff; border-radius:12px; padding:2rem; max-width:520px; width:90%; position:relative; box-shadow:0 4px 20px rgba(0,0,0,0.3); max-height:85vh; overflow-y:auto;">
+            <button onclick="document.getElementById('ytModal1').style.display='none'" style="position:absolute; top:0.8rem; right:1rem; background:none; border:none; font-size:1.5rem; cursor:pointer; color:#999;">✕</button>
+            <h3 style="margin:0 0 1rem 0; font-size:1.2rem;">🔗 Mise à jour des liens YouTube</h3>
+            <p style="color:#555; font-size:0.9rem; margin:0 0 0.8rem 0;">
+                Cet outil va automatiquement remplacer l'ancien lien du site par le nouveau
+                dans les descriptions de toutes tes vidéos YouTube.
+            </p>
+            <div style="background:#f8f8f8; border-radius:8px; padding:1rem; margin:0 0 1rem 0; font-size:0.85rem;">
+                <p style="margin:0 0 0.5rem 0; color:#c00;">❌ <strong>Ancien :</strong> piano-jazz-concept.onrender.com/...</p>
+                <p style="margin:0; color:#090;">✅ <strong>Nouveau :</strong> pianojazzconcept.pythonanywhere.com/?view=index</p>
+            </div>
+            <p style="color:#555; font-size:0.85rem; margin:0 0 0.5rem 0;">
+                Peu importe la forme de l'ancien lien (avec ou sans <em>?view=index</em>, etc.),
+                il sera remplacé par le nouveau lien ci-dessus.
+            </p>
+            <ul style="color:#555; font-size:0.85rem; margin:0 0 1rem 0; padding-left:1.2rem; line-height:1.6;">
+                <li>Seul l'ancien lien est modifié — tout le reste de tes descriptions reste intact</li>
+                <li>Les vidéos sans ancien lien ne sont pas touchées</li>
+                <li>Tu pourras d'abord tester sur 3 vidéos avant d'appliquer à toutes</li>
+                <li>Une sauvegarde de tes descriptions sera créée avant toute modification</li>
+            </ul>
+            <div style="background:#f0f4ff; border-radius:8px; padding:0.8rem; margin:0 0 1rem 0; font-size:0.85rem; color:#336;">
+                <strong>Note :</strong> À l'étape suivante, Google va te demander d'autoriser
+                l'accès à ta chaîne YouTube. C'est normal — cet outil utilise l'API officielle
+                de YouTube pour modifier tes descriptions en toute sécurité.
+            </div>
+            <p style="color:#888; font-size:0.8rem; margin:0 0 1rem 0;">
+                ⚠️ YouTube limite les modifications à 190 vidéos par jour.
+                S'il y en a plus, il suffira de relancer l'outil le lendemain.
+            </p>
+            <button onclick="startYouTubeOAuth()" style="width:100%; padding:0.8rem; background:#333; color:#fff; border:none; border-radius:8px; font-size:1rem; cursor:pointer;">
+                Continuer →
+            </button>
+        </div>
+    </div>
+
+    <!-- YouTube Description Updater — Modal 2: Analysis Results -->
+    <div id="ytModal2" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:10000; align-items:center; justify-content:center;">
+        <div style="background:#fff; border-radius:12px; padding:2rem; max-width:520px; width:90%; position:relative; box-shadow:0 4px 20px rgba(0,0,0,0.3);">
+            <button onclick="document.getElementById('ytModal2').style.display='none'" style="position:absolute; top:0.8rem; right:1rem; background:none; border:none; font-size:1.5rem; cursor:pointer; color:#999;">✕</button>
+            <h3 style="margin:0 0 1rem 0; font-size:1.2rem;" id="ytModal2Title">📊 Analyse en cours...</h3>
+            <div id="ytAnalysisContent">
+                <div style="text-align:center; color:#888; padding:2rem;">⏳ Analyse de tes vidéos YouTube...<br><small>(peut prendre 30 secondes)</small></div>
+            </div>
+            <div id="ytAnalysisActions" style="display:none; margin-top:1rem;">
+                <button onclick="applyYouTubeUpdate('test')" id="ytTestBtn" style="width:100%; padding:0.8rem; background:#2c3e50; color:#fff; border:none; border-radius:8px; font-size:1rem; cursor:pointer; margin-bottom:0.5rem;">
+                    🧪 Tester sur 3 vidéos d'abord
+                </button>
+                <button onclick="applyYouTubeUpdate('all')" id="ytAllBtn" style="width:100%; padding:0.8rem; background:#333; color:#fff; border:none; border-radius:8px; font-size:1rem; cursor:pointer;">
+                    ✅ Tout appliquer (<span id="ytUpdateCount">0</span> vidéos)
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- YouTube Description Updater — Modal 3: Results -->
+    <div id="ytModal3" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:10000; align-items:center; justify-content:center;">
+        <div style="background:#fff; border-radius:12px; padding:2rem; max-width:600px; width:90%; position:relative; box-shadow:0 4px 20px rgba(0,0,0,0.3); max-height:80vh; overflow-y:auto;">
+            <button onclick="document.getElementById('ytModal3').style.display='none'" style="position:absolute; top:0.8rem; right:1rem; background:none; border:none; font-size:1.5rem; cursor:pointer; color:#999;">✕</button>
+            <h3 style="margin:0 0 1rem 0; font-size:1.2rem;" id="ytResultsTitle">Résultats</h3>
+            <div id="ytResultsContent"></div>
+            <div id="ytResultsActions" style="display:none; margin-top:1rem;"></div>
+        </div>
+    </div>
+    {% endif %}
 </body>
 </html>

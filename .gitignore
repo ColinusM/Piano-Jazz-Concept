@@ -5,3 +5,5 @@ __pycache__/
 config/__pycache__/
 .env
 *.db-journal
+data/youtube_backup_*.json
+data/youtube_refresh_token.json

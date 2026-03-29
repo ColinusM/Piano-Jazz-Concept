@@ -324,6 +324,17 @@ await fetch('/api/v0/user/PianoJazzConcept/files/path/home/PianoJazzConcept/Pian
 **Key Lesson:** When deploying to PythonAnywhere via the file API, always DELETE then re-upload rather than just overwriting. This ensures the cached file is invalidated. Update the deploy JS snippet accordingly.
 
 
+**Post-mortem: INSERT OR REPLACE breaks song thumbnails (2026-03-29)**
+
+**Issue:** 155 out of 299 song cards had missing thumbnails on production.
+
+**Root cause:** `utils/scrape_youtube.py` used `INSERT OR REPLACE INTO videos`. SQLite's REPLACE deletes the old row and inserts a new one with a **new auto-increment `id`**. Since `songs.video_id` is a FK to `videos.id`, all songs referencing the old ID became orphaned — the JOIN to get `thumbnail_url` returned NULL.
+
+**Fix:**
+1. Re-mapped all 155 broken `songs.video_id` values using `video_url` matching: `UPDATE songs SET video_id = (SELECT id FROM videos WHERE url = songs.video_url)`
+2. Changed the scrape script to `INSERT OR IGNORE` + `UPDATE ... WHERE video_id=?` to preserve existing row IDs.
+
+**Key Lesson:** Never use `INSERT OR REPLACE` on tables with auto-increment IDs that are referenced as foreign keys. Use `INSERT OR IGNORE` + `UPDATE` instead.
 
 
 

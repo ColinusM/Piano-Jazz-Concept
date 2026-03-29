@@ -17,6 +17,10 @@ class Config:
     AUTO_LOGIN = AUTO_LOGIN
     OPENAI_API_KEY = os.getenv('OPENAI_API_KEY')
     YOUTUBE_API_KEY = os.getenv('YOUTUBE_API_KEY')
+    YOUTUBE_CLIENT_SECRET_PATH = os.path.join(
+        os.path.dirname(__file__), '..', 'config',
+        'client_secret_669231030065-of0u2ovg4sqs69ho0r70m9a3so5obmm6.apps.googleusercontent.com.json'
+    )
 
 
 class DevelopmentConfig(Config):
