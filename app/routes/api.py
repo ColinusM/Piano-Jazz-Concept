@@ -653,6 +653,8 @@ def youtube_oauth_start():
     )
 
     session['youtube_oauth_state'] = state
+    # Save PKCE code_verifier — needed to exchange the code in the callback
+    session['youtube_code_verifier'] = flow.code_verifier
     return redirect(authorization_url)
 
 
@@ -676,6 +678,8 @@ def oauth2callback():
         state=state
     )
     flow.redirect_uri = _get_youtube_redirect_uri()
+    # Restore PKCE code_verifier from session
+    flow.code_verifier = session.get('youtube_code_verifier')
 
     # Fix for PythonAnywhere reverse proxy: force HTTPS in the callback URL
     authorization_response = request.url
