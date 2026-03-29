@@ -525,7 +525,7 @@ DATA_DIR = os.path.join(os.path.dirname(__file__), '..', '..', 'data')
 
 # --- Production config (Étienne's channel) ---
 # OLD_DOMAIN_PATTERN = r'https?://piano-jazz-concept\.onrender\.com[^\s]*'
-# NEW_URL = 'https://pianojazzconcept.pythonanywhere.com/?view=index'
+NEW_URL = 'https://pianojazzconcept.pythonanywhere.com/?view=index'
 
 # --- Test config (Colin's channel) ---
 OLD_CONTENT_MARKER = 'I need money'
