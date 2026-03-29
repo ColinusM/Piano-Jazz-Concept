@@ -523,68 +523,26 @@ Be comprehensive BUT conservative! Only extract what's actually there."""
 YOUTUBE_SCOPES = ['https://www.googleapis.com/auth/youtube.force-ssl']
 DATA_DIR = os.path.join(os.path.dirname(__file__), '..', '..', 'data')
 
-# --- Production config (Étienne's channel) ---
-# OLD_DOMAIN_PATTERN = r'https?://piano-jazz-concept\.onrender\.com[^\s]*'
+# --- Production config ---
+OLD_DOMAIN_PATTERN = r'https?://piano-jazz-concept\.onrender\.com[^\s]*'
+OLD_DOMAIN = 'piano-jazz-concept.onrender.com'
+NEW_DOMAIN = 'pianojazzconcept.pythonanywhere.com'
 NEW_URL = 'https://pianojazzconcept.pythonanywhere.com/?view=index'
-
-# --- Test config (Colin's channel) ---
-OLD_CONTENT_MARKER = 'I need money'
-NEW_CONTENT_MARKER = 'Get immediate access'
 
 
 def _needs_update(description):
-    """Check if a description contains content that needs updating."""
-    return (OLD_CONTENT_MARKER.lower() in description.lower() or
-            'all other and all future ones' in description.lower())
+    """Check if description contains the OLD domain (needs replacement)."""
+    return OLD_DOMAIN in description
 
 
 def _is_already_updated(description):
-    """Check if a description has already been updated."""
-    return (NEW_CONTENT_MARKER.lower() in description.lower() or
-            NEW_URL in description)
+    """Check if description contains the NEW domain (already correct)."""
+    return NEW_DOMAIN in description
 
 
 def _transform_description(description):
-    """Apply all transformations to a description.
-
-    1. Remove date + 'I need money' pitch (keep Patreon link)
-    2. Replace file text with new wording
-    3. Deduplicate email lines
-    """
-    # 1. Remove date + pitch: "11 October 2024 "Hello, I need money...more info there"
-    #    Keep everything from the Patreon link onwards
-    description = re.sub(
-        r'\d{1,2}\s+\w+\s+\d{4}\s*"?Hello.*?more info there\s*',
-        '',
-        description,
-        flags=re.IGNORECASE | re.DOTALL
-    )
-
-    # 2. Replace file text (with optional closing quote)
-    description = re.sub(
-        r'You will get this file and all other and all future ones"?',
-        'Get immediate access to this file and all previous ones for just $3',
-        description,
-        flags=re.IGNORECASE
-    )
-
-    # 3. Deduplicate email/queries lines
-    email_pattern = r'(?:email|queries)\s*:\s*colin\.mignot1@gmail\.com'
-    matches = list(re.finditer(email_pattern, description, re.IGNORECASE))
-    if len(matches) > 1:
-        for match in reversed(matches[1:]):
-            start = match.start()
-            end = match.end()
-            # Remove surrounding newlines too
-            while start > 0 and description[start - 1] == '\n':
-                start -= 1
-            while end < len(description) and description[end:end + 1] == '\n':
-                end += 1
-            description = description[:start] + description[end:]
-
-    # Clean up extra blank lines
-    description = re.sub(r'\n{3,}', '\n\n', description)
-    return description.strip()
+    """Replace all old domain URLs with the new URL."""
+    return re.sub(OLD_DOMAIN_PATTERN, NEW_URL, description)
 
 
 def _get_youtube_redirect_uri():
