@@ -4,6 +4,15 @@ Tous les changements notables apportés à Piano Jazz Concept seront documentés
 
 ## 2026-03-29
 
+### Nouvelles fonctionnalités
+- **Outil de mise à jour des liens YouTube** — Un nouveau bouton 🔗 est disponible dans l'espace administrateur. Il permet de remplacer automatiquement l'ancien lien du site par le nouveau dans les descriptions de toutes vos vidéos YouTube, ou d'ajouter le lien aux vidéos qui n'en ont pas. L'outil analyse d'abord vos vidéos, affiche un résumé, et vous permet de tester sur quelques vidéos avant d'appliquer à toutes. Une sauvegarde de vos descriptions est créée avant chaque modification.
+
+### Améliorations
+- Les descriptions des vidéos respectent maintenant les retours à la ligne (chaque lien apparaît sur sa propre ligne)
+
+### Corrections
+- Correction du lien dans la description de la dernière vidéo publiée (« Mon diagnostic d'Angine de poitrine… »)
+
 ### Nouveaux morceaux
 - **8 nouveaux morceaux ajoutés au catalogue** — Le catalogue passe de 291 à 299 morceaux (140 vidéos couvertes sur 234)
 - 2 nouvelles vidéos de la chaîne intégrées :
