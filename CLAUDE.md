@@ -337,6 +337,32 @@ await fetch('/api/v0/user/PianoJazzConcept/files/path/home/PianoJazzConcept/Pian
 **Key Lesson:** Never use `INSERT OR REPLACE` on tables with auto-increment IDs that are referenced as foreign keys. Use `INSERT OR IGNORE` + `UPDATE` instead.
 
 
+**Post-mortem: YouTube OAuth deploy issues (2026-03-29)**
+
+Three issues hit during the YouTube Description Updater deploy:
+
+1. **Missing client secret on PythonAnywhere:** The `config/client_secret_*.json` file is not in git (security). Must be uploaded manually to PythonAnywhere via the file API.
+
+2. **OAuth PKCE code_verifier lost across redirect:** Google now requires PKCE. The `Flow` object generates a `code_verifier` during `authorization_url()`, but it's lost when the `Flow` is recreated in the callback. **Fix:** Save `flow.code_verifier` in the Flask session during `/api/youtube-oauth-start`, restore it in `/oauth2callback` with `flow.code_verifier = session.get('youtube_code_verifier')`.
+
+3. **GitHub CDN caching during deploy:** `raw.githubusercontent.com` can serve stale file content for minutes after a push. **Fix:** Add a cache-busting query param (`?cb=Date.now()`) when fetching files from GitHub in the deploy script, and always verify the deployed file content matches expectations.
+
+4. **UTF-8 corruption via GitHub API + `atob()`:** JavaScript's `atob()` cannot decode base64-encoded UTF-8 multi-byte characters (like `é`, `è`). Files fetched via the GitHub Contents API (`/repos/.../contents/...`) and decoded with `atob()` will have corrupted French characters. **Fix:** Either use `raw.githubusercontent.com` (returns raw UTF-8), or use `git pull` on the server, or patch files in-place via the PythonAnywhere file API (read → string replace → re-upload).
+
+5. **Dangling `let` after in-place patching:** When patching a file on the server by replacing a substring, be careful not to leave orphaned syntax. Example: replacing `previewHtml = '...'` inside `let previewHtml = '...'` left behind `let if (...)` which broke the entire JS file. **Fix:** Always check the surrounding context when doing string replacements on deployed files.
+
+**Key Lesson:** Always verify deployed files contain expected changes before declaring a deploy successful. Prefer `git pull` on the server over file API uploads when the project is a git repo — it preserves encoding and avoids partial-replacement bugs. PythonAnywhere's project directory is NOT a git repo (files are uploaded manually), so in-place patching must be done carefully.
+
+
+**Database Backup (2026-03-29)**
+
+A production database backup was downloaded from PythonAnywhere and saved locally at:
+`database/piano_jazz_videos_PRODUCTION_BACKUP_20260329.db` (454,656 bytes, 234 videos, 301 songs).
+
+The YouTube description updater also creates per-run backups on PythonAnywhere at `data/youtube_backup_YYYYMMDD_HHMMSS.json` — these contain the original descriptions of every video modified in that run. Accessible via PythonAnywhere file browser or API.
+
+The database is NOT in git (binary file, doesn't diff well). To create a new backup, download via PythonAnywhere file API (read the `.db` file from the server through Chrome DevTools MCP).
+
 
 **CRITICAL:** When the user says "ready to push", you MUST:
 
