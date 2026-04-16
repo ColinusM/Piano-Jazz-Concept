@@ -2,6 +2,18 @@
 
 Tous les changements notables apportés à Piano Jazz Concept seront documentés dans ce fichier.
 
+## 2026-04-16
+
+### Nouveaux morceaux
+- **4 nouveaux morceaux ajoutés au catalogue** — Le catalogue passe de 301 à 305 morceaux
+- Nouvelle vidéo intégrée : **Les Modes parallèles** — Étienne analyse le parallélisme modal en musique de film et dans le jazz :
+  - Un éléphant ça trompe énormément (Vladimir Cosma)
+  - La Gloire de mon père (Vladimir Cosma)
+  - Fly Me to the Moon (Bart Howard)
+  - On Green Dolphin Street (Bronisław Kaper)
+
+---
+
 ## 2026-03-29
 
 ### Nouvelles fonctionnalités
