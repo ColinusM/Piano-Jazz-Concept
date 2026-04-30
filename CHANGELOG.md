@@ -2,6 +2,15 @@
 
 Tous les changements notables apportés à Piano Jazz Concept seront documentés dans ce fichier.
 
+## 2026-04-30
+
+### Nouveaux morceaux
+- **1 nouveau morceau ajouté au catalogue**
+- Nouvelle vidéo intégrée : **Comme d'habitude (My Way) : l'étrange dépôt SACEM** — Étienne analyse en profondeur la chanson de Claude François à partir du manuscrit déposé à la SACEM (tonicisation, modes parallèles, recherches harmoniques) :
+  - Comme d'habitude (Jacques Revaux / Claude François / Gilles Thibaut)
+
+---
+
 ## 2026-04-16
 
 ### Nouveaux morceaux
