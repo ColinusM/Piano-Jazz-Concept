@@ -2,6 +2,27 @@
 
 Tous les changements notables apportés à Piano Jazz Concept seront documentés dans ce fichier.
 
+## 2026-05-26
+
+### Nouveaux morceaux
+- **7 nouveaux morceaux ajoutés au catalogue** — Le catalogue passe à 311 morceaux
+- Nouvelle vidéo intégrée : **LIFE ON MARS ou le superbe pied de nez à MY WAY (Comme d'habitude)** — Étienne retrace la généalogie improbable qui relie Claude François, Frank Sinatra et David Bowie autour d'une même mélodie :
+  - Comme d'habitude (Jacques Revaux / Claude François / Gilles Thibaut)
+  - My Way (Paul Anka / Frank Sinatra)
+  - Life on Mars? (David Bowie)
+- Nouvelle vidéo intégrée : **Hervé Vilard a-t-il plagié David Bowie ?** — Analyse comparative entre « Nous » d'Hervé Vilard et « Life on Mars? » de David Bowie pour répondre aux soupçons des spectateurs :
+  - Nous (Toto Cutugno / Hervé Vilard)
+  - Life on Mars? (David Bowie)
+- Nouvelle vidéo intégrée : **Lament (J.J. Johnson)** — Analyse de la ballade jazz signée par le tromboniste, devenue un standard du répertoire :
+  - Lament (J.J. Johnson)
+- Nouvelle vidéo courte intégrée : **Comme d'habitude / My Way** — Démonstration rapide d'une réharmonisation jazz :
+  - Comme d'habitude (Jacques Revaux / Claude François / Gilles Thibaut)
+
+### Autres ajouts
+- Deux nouvelles vidéos sans analyse musicale spécifique sont également venues étoffer la chaîne : **IA : le piège de la caution humaine** et **Quand l'élève se DÉCOURAGE**.
+
+---
+
 ## 2026-04-30
 
 ### Nouveaux morceaux
