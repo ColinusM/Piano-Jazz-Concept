@@ -24,6 +24,16 @@ Piano Jazz Concept Video Catalog - A Flask web application that indexes and disp
 
 The web interface displays SONGS (not videos), with each song card showing which video it came from.
 
+## CRITICAL: DB-only commits need a text-file change too
+
+When the only thing you modified is `database/piano_jazz_videos.db`, **always also modify a tracked text file in the same commit** (e.g. add the new entries to `CHANGELOG.md`, bump a comment, etc.). SQLite binary changes can fail to register as a meaningful git diff and the commit may appear empty in review. Adding a real text change guarantees the commit lands with visible content.
+
+## Always run the full publish sequence in one go
+
+When the user asks to add new content (new videos / songs), execute the full pipeline without pausing to ask for confirmation between steps:
+1. Scrape → 2. Extract songs → 3. Tag `analysis_depth` → 4. Commit DB + text change → 5. Update CHANGELOG → 6. Commit changelog → 7. `git push` → 8. Deploy to PythonAnywhere → 9. Verify with curl → 10. Open production site in Chrome.
+Only stop to ask if something is genuinely ambiguous or risky (destructive ops, unclear song identification, missing credentials, etc.).
+
 ## Running the Application
 
 ```bash
