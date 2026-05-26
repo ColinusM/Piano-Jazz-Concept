@@ -253,7 +253,8 @@ async () => {
   const h = {'X-CSRFToken': csrf};
 
   // List ALL files that changed (adjust this list per deploy)
-  const files = ['app.py', 'templates/index.html', 'database/piano_jazz_videos.db'];
+  // ALWAYS include CHANGELOG.md when the changelog was updated — the bell reads it from disk
+  const files = ['app.py', 'templates/index.html', 'database/piano_jazz_videos.db', 'CHANGELOG.md'];
 
   for (const file of files) {
     const resp = await fetch(`https://raw.githubusercontent.com/ColinusM/Piano-Jazz-Concept/main/${file}`);
