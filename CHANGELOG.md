@@ -2,6 +2,13 @@
 
 Tous les changements notables apportés à Piano Jazz Concept seront documentés dans ce fichier.
 
+## 2026-05-31
+
+### Nouveaux morceaux
+- Nouvelle vidéo intégrée : **Nardis, hommage à Miles Davis** — Étienne analyse ce standard du jazz modal, d'abord sous l'angle modal puis sous l'angle fonctionnel :
+  - Nardis (Miles Davis)
+- Le catalogue passe à 312 morceaux
+
 ## 2026-05-26
 
 ### Nouveaux morceaux
