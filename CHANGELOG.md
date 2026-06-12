@@ -2,6 +2,18 @@
 
 Tous les changements notables apportés à Piano Jazz Concept seront documentés dans ce fichier.
 
+## 2026-06-12
+
+### Nouveaux morceaux
+- **3 nouveaux morceaux ajoutés au catalogue** — Le catalogue passe à 315 morceaux
+- Nouvelle vidéo intégrée : **Les Harmonies électro de GENERAL ELEKTRIKS** — Étienne explore les harmonies du groupe électro-jazz d'Hervé Salters et montre que leur modernité fait déjà écho à Bach :
+  - Raid the Radio (General Elektriks)
+  - Take Back the Instant (General Elektriks)
+  - Passion selon saint Matthieu (Jean-Sébastien Bach)
+
+### Autres ajouts
+- Nouvelle vidéo intégrée : **Hommage à Sonny Rollins** — Étienne rend hommage au saxophoniste disparu le 25 mai 2026, à travers trois extraits d'interviews et une réflexion sur sa vision de la musique et de l'apprentissage (pas d'analyse musicale spécifique).
+
 ## 2026-05-31
 
 ### Nouveaux morceaux
