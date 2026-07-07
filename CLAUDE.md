@@ -243,7 +243,7 @@ Templates:
 - **Source directory:** `/home/PianoJazzConcept/Piano-Jazz-Concept`
 - **WSGI file:** `/var/www/pianojazzconcept_pythonanywhere_com_wsgi.py`
 - **Static files:** URL `/static` → `/home/PianoJazzConcept/Piano-Jazz-Concept/static`
-- **Free tier limit:** Must click "extend" once per month (email reminder sent). No CPU limit on web app itself.
+- **Free tier limit:** Must click the **"Run until 1 month from today"** button (in the "Best before date:" section of the webapps page) once per month or the site gets disabled (email reminder sent). **Claude should click this button EVERY time it lands on the webapps page during a deploy** — it's harmless to click repeatedly and guarantees the site never lapses. No CPU limit on web app itself.
 
 ### How to Deploy to Production (NO API TOKEN NEEDED)
 
@@ -295,9 +295,10 @@ curl -s "https://pianojazzconcept.pythonanywhere.com/" | grep -o '[0-9]* morceau
 1. Make changes locally
 2. `git add <files> && git commit -m "message" && git push`
 3. Open Chrome to PythonAnywhere webapps page (login if needed — creds are pre-filled)
-4. Run the JS snippet above via `mcp__chrome-devtools__evaluate_script` to pull from GitHub and reload
-5. Verify with curl
-6. Open the production site in Chrome — if no tab with `pianojazzconcept.pythonanywhere.com` is already open, use `mcp__chrome-devtools__new_page` to open `https://pianojazzconcept.pythonanywhere.com/` so the user can see the result immediately
+4. **ALWAYS click the "Run until 1 month from today" button while on the webapps page** (extends the free-tier "Best before date"). Do this EVERY time you are on this page, on every deploy — never skip it. The button is in the "Best before date:" section.
+5. Run the JS snippet above via `mcp__chrome-devtools__evaluate_script` to pull from GitHub and reload
+6. Verify with curl
+7. Open the production site in Chrome — if no tab with `pianojazzconcept.pythonanywhere.com` is already open, use `mcp__chrome-devtools__new_page` to open `https://pianojazzconcept.pythonanywhere.com/` so the user can see the result immediately
 
 ### Chrome DevTools MCP Notes
 - Chrome DevTools MCP v0.20+ uses **autoConnect** — no debug port needed, just run Chrome normally
