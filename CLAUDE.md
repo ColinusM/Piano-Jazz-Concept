@@ -31,7 +31,7 @@ When the only thing you modified is `database/piano_jazz_videos.db`, **always al
 ## Always run the full publish sequence in one go
 
 When the user asks to add new content (new videos / songs), execute the full pipeline without pausing to ask for confirmation between steps:
-1. Scrape → 2. Extract songs → 3. Tag `analysis_depth` → 4. Commit DB + text change → 5. Update CHANGELOG → 6. Commit changelog → 7. `git push` → 8. Deploy to PythonAnywhere → 9. Verify with curl → 10. Open production site in Chrome.
+1. Scrape → 2. Extract songs → 3. Tag `analysis_depth` → 4. Commit DB + text change → 5. Update CHANGELOG → 6. Commit changelog → 7. `git push` → 8. Deploy to PythonAnywhere via API (curl, no Chrome) → 9. Verify with curl.
 Only stop to ask if something is genuinely ambiguous or risky (destructive ops, unclear song identification, missing credentials, etc.).
 
 ## Running the Application
@@ -243,68 +243,67 @@ Templates:
 - **Source directory:** `/home/PianoJazzConcept/Piano-Jazz-Concept`
 - **WSGI file:** `/var/www/pianojazzconcept_pythonanywhere_com_wsgi.py`
 - **Static files:** URL `/static` → `/home/PianoJazzConcept/Piano-Jazz-Concept/static`
-- **Free tier limit:** Must click the **"Run until 1 month from today"** button (in the "Best before date:" section of the webapps page) once per month or the site gets disabled (email reminder sent). **Claude should click this button EVERY time it lands on the webapps page during a deploy** — it's harmless to click repeatedly and guarantees the site never lapses. No CPU limit on web app itself.
+- **Free tier limit:** The **"Run until 1 month from today"** button (in the "Best before date:" section of the webapps page) must be clicked once per month or the site gets disabled (email reminder sent). This is the ONLY step the API token cannot do — it's a web-UI-only form. Last clicked: 2026-07-07 (valid until ~2026-08-07). When Chrome happens to be open on the webapps page, click it; otherwise Colin handles it monthly from the email reminder. No CPU limit on web app itself.
 
-### How to Deploy to Production (NO API TOKEN NEEDED)
+### How to Deploy to Production (API TOKEN — NO CHROME NEEDED)
 
-Deploy by navigating to the PythonAnywhere webapp page in Chrome (via Chrome DevTools MCP) and using the PythonAnywhere REST API with the CSRF token from the browser cookie. **No API token is required.**
+**The deploy is 100% terminal-based via the PythonAnywhere REST API.** The token is stored in `.env` as `PYTHONANYWHERE_API_TOKEN` (gitignored — NEVER commit it or copy it into CLAUDE.md; the GitHub repo is public).
 
-**Step 1 — Navigate to PythonAnywhere in Chrome:**
+**Do NOT use the old Chrome MCP deploy flow.** It is dead: PythonAnywhere added a CSP (`default-src 'self'`) to its pages in mid-2026, which blocks in-page `fetch()` calls to `raw.githubusercontent.com` — the browser-JS snippet fails with "Failed to fetch". The API flow below uploads the LOCAL files directly, which is also better (no GitHub CDN staleness, no UTF-8/atob issues).
+
+**Deploy script (run from project root):**
+```bash
+TOKEN=$(grep PYTHONANYWHERE_API_TOKEN .env | cut -d= -f2)
+BASE="https://www.pythonanywhere.com/api/v0/user/PianoJazzConcept"
+
+# List ALL files that changed (adjust per deploy)
+# ALWAYS include CHANGELOG.md when the changelog was updated — the bell reads it from disk
+for f in "database/piano_jazz_videos.db" "CHANGELOG.md"; do
+  # DELETE first to bust PythonAnywhere's file cache, then re-upload (see post-mortem)
+  curl -s -o /dev/null -w "DELETE $f: %{http_code}\n" -X DELETE \
+    -H "Authorization: Token $TOKEN" \
+    "$BASE/files/path/home/PianoJazzConcept/Piano-Jazz-Concept/$f"
+  curl -s -o /dev/null -w "UPLOAD $f: %{http_code}\n" -X POST \
+    -H "Authorization: Token $TOKEN" -F "content=@$f" \
+    "$BASE/files/path/home/PianoJazzConcept/Piano-Jazz-Concept/$f"
+done
+
+# Reload the web app
+curl -s -o /dev/null -w "RELOAD: %{http_code}\n" -X POST \
+  -H "Authorization: Token $TOKEN" \
+  "$BASE/webapps/PianoJazzConcept.pythonanywhere.com/reload/"
 ```
-Navigate to: https://www.pythonanywhere.com/user/PianoJazzConcept/webapps/
-If logged out, click the "Log in" button (credentials are pre-filled in Chrome).
-```
+Expected status codes: DELETE 204 (or 404 if file was new), UPLOAD 201 (or 200 on overwrite), RELOAD 200.
 
-**Step 2 — Upload changed files from GitHub and reload (run as JS in Chrome):**
-```javascript
-// Run this via mcp__chrome-devtools__evaluate_script
-async () => {
-  const csrf = document.cookie.match(/csrftoken=([^;]+)/)[1];
-  const h = {'X-CSRFToken': csrf};
-
-  // List ALL files that changed (adjust this list per deploy)
-  // ALWAYS include CHANGELOG.md when the changelog was updated — the bell reads it from disk
-  const files = ['app.py', 'templates/index.html', 'database/piano_jazz_videos.db', 'CHANGELOG.md'];
-
-  for (const file of files) {
-    const resp = await fetch(`https://raw.githubusercontent.com/ColinusM/Piano-Jazz-Concept/main/${file}`);
-    const blob = await resp.blob();
-    const fd = new FormData();
-    fd.append('content', blob, file.split('/').pop());
-    const path = `/api/v0/user/PianoJazzConcept/files/path/home/PianoJazzConcept/Piano-Jazz-Concept/${file}`;
-    // DELETE first to bust cache, then re-upload (see post-mortem)
-    await fetch(path, {method: 'DELETE', headers: h});
-    await fetch(path, {method: 'POST', headers: h, body: fd});
-  }
-
-  // Reload the web app
-  await fetch('/api/v0/user/PianoJazzConcept/webapps/PianoJazzConcept.pythonanywhere.com/reload/', {
-    method: 'POST', headers: h
-  });
-
-  return 'deployed';
-}
-```
-
-**Step 3 — Verify:**
+**Verify:**
 ```bash
 curl -s "https://pianojazzconcept.pythonanywhere.com/" | grep -o '[0-9]* morceaux trouvés'
+# Changelog bell (should include the new date with "is_new": true):
+curl -s "https://pianojazzconcept.pythonanywhere.com/api/get_changelog" | head -c 300
+```
+
+**Other useful API calls (all terminal, same auth header):**
+```bash
+# Read/download a file from the server (e.g. DB backup):
+curl -s -H "Authorization: Token $TOKEN" \
+  "$BASE/files/path/home/PianoJazzConcept/Piano-Jazz-Concept/database/piano_jazz_videos.db" \
+  -o database/prod_backup_$(date +%Y%m%d).db
+# CPU quota:
+curl -s -H "Authorization: Token $TOKEN" "$BASE/cpu/"
 ```
 
 ### Deploy Workflow Summary
 1. Make changes locally
 2. `git add <files> && git commit -m "message" && git push`
-3. Open Chrome to PythonAnywhere webapps page (login if needed — creds are pre-filled)
-4. **ALWAYS click the "Run until 1 month from today" button while on the webapps page** (extends the free-tier "Best before date"). Do this EVERY time you are on this page, on every deploy — never skip it. The button is in the "Best before date:" section.
-5. Run the JS snippet above via `mcp__chrome-devtools__evaluate_script` to pull from GitHub and reload
-6. Verify with curl
-7. Open the production site in Chrome — if no tab with `pianojazzconcept.pythonanywhere.com` is already open, use `mcp__chrome-devtools__new_page` to open `https://pianojazzconcept.pythonanywhere.com/` so the user can see the result immediately
+3. Run the deploy script above (curl + API token — no Chrome, no MCP)
+4. Verify with curl (song count + changelog endpoint)
+5. Once per month only: the "Run until 1 month from today" button on the webapps page needs a click in a browser (web-UI-only; see Free tier limit above)
 
-### Chrome DevTools MCP Notes
+### Chrome DevTools MCP Notes (NOT used for deploys anymore)
+- Chrome MCP is only needed for browser-specific tasks (visual checks, YouTube OAuth flows, the monthly extend button)
 - Chrome DevTools MCP v0.20+ uses **autoConnect** — no debug port needed, just run Chrome normally
 - One-time setup: go to `chrome://inspect/#remote-debugging` in Chrome and enable the toggle
 - If session expires, navigate to PythonAnywhere login page — username and password are pre-filled, just click "Log in"
-- If CSRF cookie error (`Cannot read properties of null`), navigate to PythonAnywhere first to get a fresh cookie
 - See `.claude/rules/chrome-mcp.md` for full MCP setup details
 
 
@@ -373,7 +372,7 @@ A production database backup was downloaded from PythonAnywhere and saved locall
 
 The YouTube description updater also creates per-run backups on PythonAnywhere at `data/youtube_backup_YYYYMMDD_HHMMSS.json` — these contain the original descriptions of every video modified in that run. Accessible via PythonAnywhere file browser or API.
 
-The database is NOT in git (binary file, doesn't diff well). To create a new backup, download via PythonAnywhere file API (read the `.db` file from the server through Chrome DevTools MCP).
+To create a new production backup, download via the PythonAnywhere file API from the terminal (see "Other useful API calls" in the deploy section — no Chrome needed).
 
 
 **CRITICAL:** When the user says "ready to push", you MUST:
