@@ -2,6 +2,19 @@
 
 Tous les changements notables apportés à Piano Jazz Concept seront documentés dans ce fichier.
 
+## 2026-07-07
+
+### Nouveaux morceaux
+- **6 nouveaux morceaux ajoutés au catalogue** — Le catalogue passe à 321 morceaux
+- Nouvelle vidéo intégrée : **Cours de piano : How High The Moon** — Cours complet d'harmonisation autour de ce grand standard de 1940 : Étienne analyse et enrichit pas à pas l'harmonisation de son élève Pierre Lecarpentier :
+  - How High the Moon (Morgan Lewis)
+- Nouvelle vidéo intégrée : **La lente AGONIE de la musique de film** — Étienne partage son inquiétude face à la disparition des grands thèmes au cinéma et évoque plusieurs musiques de film marquantes, en bien comme en mal :
+  - Psychose (Bernard Herrmann)
+  - Thème d'Hedwige — Harry Potter (John Williams)
+  - Dune (Hans Zimmer)
+  - Disclosure Day (John Williams)
+  - La Chambre bleue (Grégoire Hetzel)
+
 ## 2026-06-12
 
 ### Nouveaux morceaux
